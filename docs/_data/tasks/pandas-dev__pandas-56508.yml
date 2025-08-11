@@ -1,0 +1,51 @@
+id: pandas-dev__pandas-56508
+status:
+  human: APPROVED
+  llm: COMING_SOON
+comparison:
+  llm_better: COMING_SOON
+repo:
+  org: pandas-dev
+  name: pandas
+  url: https://github.com/pandas-dev/pandas
+  pull_request: https://github.com/pandas-dev/pandas/pull/56508
+  base_commit: 1387c4fa09ca7bb13a7f1e13ecd171aebe8fef46
+  created_at: '2023-12-14 21:06:33'
+  version: '2.1'
+workload:
+  language: python
+  code: "import timeit\nimport statistics\n\nimport pandas as pd\nimport numpy as\
+    \ np\n\nnp.random.seed(0)\n\nN = 100_000\ndata = np.arange(N) \narr = pd.array(np.where(np.random.rand(N)\
+    \ > 0.1, data, np.nan), dtype=\"Int32\")\n\ndef workload():\n    arr._hash_pandas_object(encoding='utf-8',\
+    \ hash_key=\"1000000000000000\", categorize=False)\n\nruntimes = timeit.repeat(workload,\
+    \ number=5, repeat=1000)\n\n# Print runtime mean and std deviation.\nprint(\"\
+    Mean:\", statistics.mean(runtimes))\nprint(\"Std Dev:\", statistics.stdev(runtimes))\n"
+docker:
+  base_image: docker.io/sweperf/sweperf:pandas-dev__pandas-56508
+  human_image: docker.io/sweperf/sweperf_annotate:pandas-dev__pandas-56508
+  llm_image: PLACEHOLDER
+  commands:
+    run_base: docker run --rm --name bench_{id}_base --mount type=bind,src=<WORKLOAD_PY>,dst=/tmp/workload.py
+      {base_image} /bin/bash -lc 'python /tmp/workload.py' 2>&1
+    run_human: docker run --rm --name bench_{id}_human --mount type=bind,src=<WORKLOAD_PY>,dst=/tmp/workload.py
+      {human_image} /bin/bash -lc 'chmod +x /perf.sh && /perf.sh && python /tmp/workload.py'
+      2>&1
+    run_llm: echo 'LLM image not available yet for {id}. Please fill docker.llm_image.'
+metrics:
+  reducer: mean_std
+  parse_regex:
+    mean: (?i)\bMean:\s*([0-9.]+)
+    std: (?i)(Std Dev|SD):\s*([0-9.]+)
+notes:
+  user_notes: 'Before Mean: 0.18333135525044053
+
+    Before SD: 0.00152090549267328
+
+    After Mean: 0.005286734436347615
+
+    After SD: 0.00018081531441534136
+
+    Improvement: -97.12%'
+  mike_notes: ''
+meta:
+  num_covering_tests: '7'

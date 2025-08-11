@@ -1,0 +1,65 @@
+id: pandas-dev__pandas-54835
+status:
+  human: APPROVED
+  llm: COMING_SOON
+comparison:
+  llm_better: COMING_SOON
+repo:
+  org: pandas-dev
+  name: pandas
+  url: https://github.com/pandas-dev/pandas
+  pull_request: https://github.com/pandas-dev/pandas/pull/54835
+  base_commit: 3c041bc14ba88a6dd67ff3a032afa32379869332
+  created_at: '2023-08-29 2:12:34'
+  version: '2'
+workload:
+  language: python
+  code: "import timeit\nimport statistics\n\nimport pandas as pd\nimport pandas._testing\
+    \ as tm\n\n\nN = 10**5\n\nlevel1 = range(1000)\nlevel2_range = range(N // 1000)\n\
+    level2_dates = pd.date_range(start=\"1/1/2000\", periods=N // 1000)\nlevel2_strings\
+    \ = tm.makeStringIndex(N // 1000).values\nlevel2_ea_int = pd.Series(level2_range,\
+    \ dtype=\"Int64\")\n\nindexes = {\n    \"datetime\": pd.MultiIndex.from_product([level1,\
+    \ level2_dates]),\n    \"int\": pd.MultiIndex.from_product([level1, level2_range]),\n\
+    \    \"string\": pd.MultiIndex.from_product([level1, level2_strings]),\n    \"\
+    ea_int\": pd.MultiIndex.from_product([level1, level2_ea_int]),\n}\n\nindex_structures\
+    \ = [\"monotonic\", \"non_monotonic\"]\ndtypes = [\"datetime\", \"int\", \"string\"\
+    , \"ea_int\"]\nmethods = [\"intersection\", \"union\", \"symmetric_difference\"\
+    ]\nsort_options = [None]\n\noperation_registry = []\n\nfor structure in index_structures:\n\
+    \    for dtype in dtypes:\n        for method in methods:\n            for sort\
+    \ in sort_options:\n                idx = indexes[dtype]\n                if structure\
+    \ == \"non_monotonic\":\n                    idx = idx[::-1]\n\n             \
+    \   left = idx\n                right = idx[:-1] \n\n                # Save the\
+    \ operation config\n                operation_registry.append((left, right, method,\
+    \ sort))\n\ndef workload():\n    for left, right, method, sort in operation_registry:\n\
+    \        getattr(left, method)(right, sort=sort)\n\nruntimes = timeit.repeat(workload,\
+    \ number=5, repeat=25)\n\n# Print runtime mean and std deviation.\nprint(\"Mean:\"\
+    , statistics.mean(runtimes))\nprint(\"Std Dev:\", statistics.stdev(runtimes))\n"
+docker:
+  base_image: docker.io/sweperf/sweperf:pandas-dev__pandas-54835
+  human_image: docker.io/sweperf/sweperf_annotate:pandas-dev__pandas-54835
+  llm_image: PLACEHOLDER
+  commands:
+    run_base: docker run --rm --name bench_{id}_base --mount type=bind,src=<WORKLOAD_PY>,dst=/tmp/workload.py
+      {base_image} /bin/bash -lc 'python /tmp/workload.py' 2>&1
+    run_human: docker run --rm --name bench_{id}_human --mount type=bind,src=<WORKLOAD_PY>,dst=/tmp/workload.py
+      {human_image} /bin/bash -lc 'chmod +x /perf.sh && /perf.sh && python /tmp/workload.py'
+      2>&1
+    run_llm: echo 'LLM image not available yet for {id}. Please fill docker.llm_image.'
+metrics:
+  reducer: mean_std
+  parse_regex:
+    mean: (?i)\bMean:\s*([0-9.]+)
+    std: (?i)(Std Dev|SD):\s*([0-9.]+)
+notes:
+  user_notes: 'Before Mean: 0.8803832570859231
+
+    Before SD: 0.02910564810423502
+
+    After Mean: 0.49280859319493175
+
+    After SD: 0.02913071318839529
+
+    Improvement: -44.02%'
+  mike_notes: ''
+meta:
+  num_covering_tests: '111'

@@ -1,0 +1,58 @@
+id: pandas-dev__pandas-44192
+status:
+  human: APPROVED
+  llm: COMING_SOON
+comparison:
+  llm_better: COMING_SOON
+repo:
+  org: pandas-dev
+  name: pandas
+  url: https://github.com/pandas-dev/pandas
+  pull_request: https://github.com/pandas-dev/pandas/pull/44192
+  base_commit: 1b9be34545664f58481abdce9bf0c1bb7b07f0ae
+  created_at: '2021-10-26 16:00:05'
+  version: '1.3'
+workload:
+  language: python
+  code: "import timeit\nimport statistics\n\nimport os\nimport pandas\nimport numpy\n\
+    import tempfile\n\ntemp_output_file = tempfile.NamedTemporaryFile(suffix=\".csv.gz\"\
+    , delete=False).name\n\nnb_col = 100000\nnb_row = 5\n\ndef write_file():\n\n \
+    \   feature_list = {'sample': ['s_' + str(i+1) for i in range(nb_row)]}\n    for\
+    \ i in range(nb_col):\n        feature_list.update({'feature_' + str(i+1): list(numpy.random.uniform(low=0,\
+    \ high=10, size=nb_row))})\n    df = pandas.DataFrame(feature_list)\n    df.to_csv(temp_output_file,\
+    \ index=False, float_format=\"%.6f\")\n\ndef workload():\n    col_names = pandas.read_csv(temp_output_file,\
+    \ low_memory=False, nrows=1).columns\n    types_dict = {col: numpy.float32 for\
+    \ col in col_names}\n    types_dict.update({'sample': str})\n    feature_df =\
+    \ pandas.read_csv(temp_output_file, index_col=\"sample\", na_filter=False, dtype=types_dict,\
+    \ low_memory=False)\n\nwrite_file()\nruntimes = timeit.repeat(workload, number=1,\
+    \ repeat=3)\n\nos.remove(temp_output_file)\n\n# Print runtime mean and std deviation.\n\
+    print(\"Mean:\", statistics.mean(runtimes))\nprint(\"Std Dev:\", statistics.stdev(runtimes))\n"
+docker:
+  base_image: docker.io/sweperf/sweperf:pandas-dev__pandas-44192
+  human_image: docker.io/sweperf/sweperf_annotate:pandas-dev__pandas-44192
+  llm_image: PLACEHOLDER
+  commands:
+    run_base: docker run --rm --name bench_{id}_base --mount type=bind,src=<WORKLOAD_PY>,dst=/tmp/workload.py
+      {base_image} /bin/bash -lc 'python /tmp/workload.py' 2>&1
+    run_human: docker run --rm --name bench_{id}_human --mount type=bind,src=<WORKLOAD_PY>,dst=/tmp/workload.py
+      {human_image} /bin/bash -lc 'chmod +x /perf.sh && /perf.sh && python /tmp/workload.py'
+      2>&1
+    run_llm: echo 'LLM image not available yet for {id}. Please fill docker.llm_image.'
+metrics:
+  reducer: mean_std
+  parse_regex:
+    mean: (?i)\bMean:\s*([0-9.]+)
+    std: (?i)(Std Dev|SD):\s*([0-9.]+)
+notes:
+  user_notes: 'Before Mean: 105.94698462466476
+
+    Before SD: 2.900340802094236
+
+    After Mean: 2.0324380723371482
+
+    After SD: 0.007040211446777867
+
+    Improvement: -98.08%'
+  mike_notes: ''
+meta:
+  num_covering_tests: '70'

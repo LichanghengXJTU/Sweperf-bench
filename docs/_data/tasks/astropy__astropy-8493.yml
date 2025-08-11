@@ -1,0 +1,59 @@
+id: astropy__astropy-8493
+status:
+  human: APPROVED
+  llm: COMING_SOON
+comparison:
+  llm_better: COMING_SOON
+repo:
+  org: astropy
+  name: astropy
+  url: https://github.com/astropy/astropy
+  pull_request: https://github.com/astropy/astropy/pull/8493
+  base_commit: 2394af9f65825d48961457636fe8b5d40d8ad9b9
+  created_at: '2019-03-10 16:28:15'
+  version: '3.1'
+workload:
+  language: python
+  code: "import timeit\nimport statistics\n\nfrom astropy.table import Table\nimport\
+    \ numpy as np\n\ndef setup():\n    global wide_tbl, narrow_tbl, slice_1, slice_2,\
+    \ fancy_idx, bool_mask\n\n    n_rows = 100_000\n    rng = np.random.default_rng(0)\n\
+    \n    wide_tbl = Table({f\"c{i}\": rng.random(n_rows) for i in range(25)})\n \
+    \   narrow_tbl = Table({f\"c{i}\": rng.random(n_rows) for i in range(3)})\n\n\
+    \    slice_1   = slice(None)                \n    slice_2   = slice(None, None,\
+    \ 2)      \n    fancy_idx = np.arange(0, n_rows, 2) \n    bool_mask = (np.arange(n_rows)\
+    \ % 2) == 0\n\n\ndef workload():\n    global wide_tbl, narrow_tbl, slice_1, slice_2,\
+    \ fancy_idx, bool_mask\n\n    # --- wide table ---\n    _ = wide_tbl[slice_1]\n\
+    \    _ = wide_tbl[slice_2]\n    _ = wide_tbl[fancy_idx]\n    _ = wide_tbl[bool_mask]\n\
+    \n    # --- narrow table ---\n    _ = narrow_tbl[slice_1]\n    _ = narrow_tbl[slice_2]\n\
+    \    _ = narrow_tbl[fancy_idx]\n    _ = narrow_tbl[bool_mask]\n\nruntimes = timeit.repeat(workload,\
+    \ number=1, repeat=20, setup=setup)\n\n# Print runtime mean and std deviation.\n\
+    print(\"Mean:\", statistics.mean(runtimes))\nprint(\"Std Dev:\", statistics.stdev(runtimes))"
+docker:
+  base_image: docker.io/sweperf/sweperf:astropy__astropy-8493
+  human_image: docker.io/sweperf/sweperf_annotate:astropy__astropy-8493
+  llm_image: PLACEHOLDER
+  commands:
+    run_base: docker run --rm --name bench_{id}_base --mount type=bind,src=<WORKLOAD_PY>,dst=/tmp/workload.py
+      {base_image} /bin/bash -lc 'python /tmp/workload.py' 2>&1
+    run_human: docker run --rm --name bench_{id}_human --mount type=bind,src=<WORKLOAD_PY>,dst=/tmp/workload.py
+      {human_image} /bin/bash -lc 'chmod +x /perf.sh && /perf.sh && python /tmp/workload.py'
+      2>&1
+    run_llm: echo 'LLM image not available yet for {id}. Please fill docker.llm_image.'
+metrics:
+  reducer: mean_std
+  parse_regex:
+    mean: (?i)\bMean:\s*([0-9.]+)
+    std: (?i)(Std Dev|SD):\s*([0-9.]+)
+notes:
+  user_notes: 'Before Mean: 0.016671962797408922
+
+    Before SD: 0.0014536300434834309
+
+    After Mean: 0.014684626943198964
+
+    After SD: 0.002023690509660388
+
+    Improvement: -11.92%'
+  mike_notes: ''
+meta:
+  num_covering_tests: '21'

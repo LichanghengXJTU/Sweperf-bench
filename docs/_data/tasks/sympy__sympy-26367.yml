@@ -1,0 +1,54 @@
+id: sympy__sympy-26367
+status:
+  human: APPROVED
+  llm: COMING_SOON
+comparison:
+  llm_better: COMING_SOON
+repo:
+  org: sympy
+  name: sympy
+  url: https://github.com/sympy/sympy
+  pull_request: https://github.com/sympy/sympy/pull/26367
+  base_commit: a775d74879aab1bc1d8fe2193511880cdbd34cc6
+  created_at: '2024-03-18 13:06:22'
+  version: '1.13'
+workload:
+  language: python
+  code: "import timeit\nimport statistics\nfrom sympy.physics.mechanics.models import\
+    \ n_link_pendulum_on_cart\nfrom sympy.physics.mechanics import partial_velocity\n\
+    from sympy.physics.vector import ReferenceFrame\nfrom sympy.core.cache import\
+    \ clear_cache\n\ndef setup():\n    clear_cache()\n    global fr, vr, frame\n \
+    \   kanes = n_link_pendulum_on_cart(n=10, cart_force=True, joint_torques=False)\n\
+    \n    fr = [f for (_, f) in kanes.forcelist]\n    vr = kanes.u\n    frame = ReferenceFrame('N')\n\
+    \ndef workload():\n    global fr, vr, frame\n    partial_velocity(fr, vr, frame)\n\
+    \nruntimes = timeit.repeat(workload, number=1, repeat=100, setup = setup)\nprint(\"\
+    Mean:\", statistics.mean(runtimes))\nprint(\"Std Dev:\", statistics.stdev(runtimes))"
+docker:
+  base_image: docker.io/sweperf/sweperf:sympy__sympy-26367
+  human_image: docker.io/sweperf/sweperf_annotate:sympy__sympy-26367
+  llm_image: PLACEHOLDER
+  commands:
+    run_base: docker run --rm --name bench_{id}_base --mount type=bind,src=<WORKLOAD_PY>,dst=/tmp/workload.py
+      {base_image} /bin/bash -lc 'python /tmp/workload.py' 2>&1
+    run_human: docker run --rm --name bench_{id}_human --mount type=bind,src=<WORKLOAD_PY>,dst=/tmp/workload.py
+      {human_image} /bin/bash -lc 'chmod +x /perf.sh && /perf.sh && python /tmp/workload.py'
+      2>&1
+    run_llm: echo 'LLM image not available yet for {id}. Please fill docker.llm_image.'
+metrics:
+  reducer: mean_std
+  parse_regex:
+    mean: (?i)\bMean:\s*([0-9.]+)
+    std: (?i)(Std Dev|SD):\s*([0-9.]+)
+notes:
+  user_notes: 'Before Mean: 0.020631881590234116
+
+    Before SD: 0.00018969004273234217
+
+    After Mean: 0.001644876455538906
+
+    After SD: 1.5807772512576416e-05
+
+    Improvement: -92.03%'
+  mike_notes: ''
+meta:
+  num_covering_tests: '1'

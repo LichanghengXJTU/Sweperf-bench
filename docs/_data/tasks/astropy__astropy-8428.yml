@@ -1,0 +1,58 @@
+id: astropy__astropy-8428
+status:
+  human: APPROVED
+  llm: COMING_SOON
+comparison:
+  llm_better: COMING_SOON
+repo:
+  org: astropy
+  name: astropy
+  url: https://github.com/astropy/astropy
+  pull_request: https://github.com/astropy/astropy/pull/8428
+  base_commit: 8d97a4f9d62a76629ac9b86ebd1c22c340ea7a0e
+  created_at: '2019-02-15 23:16:00'
+  version: '3'
+workload:
+  language: python
+  code: "import timeit\nimport statistics\nimport tempfile\nimport os\n\nfrom astropy.io\
+    \ import fits\n\nN_EXTENSIONS = 335          \nCARDS_PER_KIND = 425      \n\n\
+    def make_header(ncards=CARDS_PER_KIND):\n    cards = {\n        **{f\"INT{i}\"\
+    : i for i in range(ncards)},\n        **{f\"FLT{i}\": i + i / 10.0 for i in range(ncards)},\n\
+    \        **{f\"STR{i}\": f\"VALUE {i}\" for i in range(ncards)},\n        **{f\"\
+    HIERARCH FOO BAR {i}\": i for i in range(ncards)},\n    }\n    return fits.Header(cards)\n\
+    \nhdr = make_header()\nhdul = fits.HDUList(\n    [fits.PrimaryHDU(header=hdr)]\
+    \ +\n    [fits.ImageHDU(header=hdr) for _ in range(N_EXTENSIONS)]\n)\n\ntemp_fits\
+    \ = tempfile.NamedTemporaryFile(suffix=\".fits\", delete=False)\nhdul.writeto(temp_fits.name,\
+    \ overwrite=True)\n\ndef workload():\n    len(fits.open(temp_fits.name))\n\nruntimes\
+    \ = timeit.repeat(workload, number=1, repeat=10)\n\nos.remove(temp_fits.name)\n\
+    \n# Print runtime mean and std deviation.\nprint(\"Mean:\", statistics.mean(runtimes))\n\
+    print(\"Std Dev:\", statistics.stdev(runtimes))\n"
+docker:
+  base_image: docker.io/sweperf/sweperf:astropy__astropy-8428
+  human_image: docker.io/sweperf/sweperf_annotate:astropy__astropy-8428
+  llm_image: PLACEHOLDER
+  commands:
+    run_base: docker run --rm --name bench_{id}_base --mount type=bind,src=<WORKLOAD_PY>,dst=/tmp/workload.py
+      {base_image} /bin/bash -lc 'python /tmp/workload.py' 2>&1
+    run_human: docker run --rm --name bench_{id}_human --mount type=bind,src=<WORKLOAD_PY>,dst=/tmp/workload.py
+      {human_image} /bin/bash -lc 'chmod +x /perf.sh && /perf.sh && python /tmp/workload.py'
+      2>&1
+    run_llm: echo 'LLM image not available yet for {id}. Please fill docker.llm_image.'
+metrics:
+  reducer: mean_std
+  parse_regex:
+    mean: (?i)\bMean:\s*([0-9.]+)
+    std: (?i)(Std Dev|SD):\s*([0-9.]+)
+notes:
+  user_notes: 'Before Mean: 3.3748016394965816
+
+    Before SD: 0.04548551225521506
+
+    After Mean: 3.012188387301285
+
+    After SD: 0.04838260082221467
+
+    Improvement: -10.74%'
+  mike_notes: ''
+meta:
+  num_covering_tests: '25'

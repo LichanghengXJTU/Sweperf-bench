@@ -1,0 +1,55 @@
+id: pydata__xarray-7796
+status:
+  human: APPROVED
+  llm: COMING_SOON
+comparison:
+  llm_better: COMING_SOON
+repo:
+  org: pydata
+  name: xarray
+  url: https://github.com/pydata/xarray
+  pull_request: https://github.com/pydata/xarray/pull/7796
+  base_commit: 2873831e5048fc630b1eaa5b3316d2e876e1afc7
+  created_at: '2023-04-29 4:22:10'
+  version: '2023.04'
+workload:
+  language: python
+  code: "import timeit\nimport statistics\n\nimport numpy as np\nimport xarray as\
+    \ xr\n\nNTIME = 365 * 30\n\ndef setup():\n    global das\n    das = []\n    calendars\
+    \ = [\"standard\", \"noleap\"]\n    for calendar in calendars:\n        time =\
+    \ xr.date_range(\"2000\", periods=NTIME, calendar=calendar)\n        data = np.ones((NTIME,))\n\
+    \        da = xr.DataArray(data, dims=\"time\", coords={\"time\": time})\n   \
+    \ \n        das.append(da)\n\n\ndef workload():\n    global das\n    for da in\
+    \ das:\n        da.time.dt.dayofyear\n        da.time.dt.year\n\n\nruntimes =\
+    \ timeit.repeat(workload, number=1, repeat=100, setup=setup)\n\n# Print runtime\
+    \ mean and std deviation.\nprint(\"Mean:\", statistics.mean(runtimes))\nprint(\"\
+    Std Dev:\", statistics.stdev(runtimes))"
+docker:
+  base_image: docker.io/sweperf/sweperf:pydata__xarray-7796
+  human_image: docker.io/sweperf/sweperf_annotate:pydata__xarray-7796
+  llm_image: PLACEHOLDER
+  commands:
+    run_base: docker run --rm --name bench_{id}_base --mount type=bind,src=<WORKLOAD_PY>,dst=/tmp/workload.py
+      {base_image} /bin/bash -lc 'python /tmp/workload.py' 2>&1
+    run_human: docker run --rm --name bench_{id}_human --mount type=bind,src=<WORKLOAD_PY>,dst=/tmp/workload.py
+      {human_image} /bin/bash -lc 'chmod +x /perf.sh && /perf.sh && python /tmp/workload.py'
+      2>&1
+    run_llm: echo 'LLM image not available yet for {id}. Please fill docker.llm_image.'
+metrics:
+  reducer: mean_std
+  parse_regex:
+    mean: (?i)\bMean:\s*([0-9.]+)
+    std: (?i)(Std Dev|SD):\s*([0-9.]+)
+notes:
+  user_notes: 'Before Mean: 0.006055535627529025
+
+    Before SD: 0.0001547273236102017
+
+    After Mean: 0.004666390981292352
+
+    After SD: 0.00013432009646396033
+
+    Improvement: -22.94%'
+  mike_notes: ''
+meta:
+  num_covering_tests: '55'

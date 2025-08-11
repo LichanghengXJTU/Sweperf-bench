@@ -1,0 +1,54 @@
+id: pydata__xarray-7382
+status:
+  human: APPROVED
+  llm: COMING_SOON
+comparison:
+  llm_better: COMING_SOON
+repo:
+  org: pydata
+  name: xarray
+  url: https://github.com/pydata/xarray
+  pull_request: https://github.com/pydata/xarray/pull/7382
+  base_commit: b93dae4079daf0fc4c042fd0d699c16624430cdc
+  created_at: '2022-12-15 12:54:56'
+  version: '2022.09'
+workload:
+  language: python
+  code: "import timeit\nimport statistics\n\nimport numpy as np\nimport pandas as\
+    \ pd\nimport xarray as xr\n\nm = 100_000\ni1 = np.repeat([1, 2, 3, 4], m) \ni2\
+    \ = np.tile(np.arange(m), 4)\nd3 = np.random.randint(0, 2, 4 * m).astype(bool)\n\
+    \nds = xr.Dataset(\n    data_vars=dict(\n        d3=(\"row\", d3)  \n    ),\n\
+    \    coords=dict(\n        i1=(\"row\", i1), \n        i2=(\"row\", i2)\n    ),\n\
+    )\nds = ds.set_index(row=[\"i1\", \"i2\"]).rename({\"row\": \"index\"})\n\ndef\
+    \ workload():\n    ds.assign(foo=~ds[\"d3\"])\n\nruntimes = timeit.repeat(workload,\
+    \ number=5, repeat=100)\n\n# Print runtime mean and std deviation.\nprint(\"Mean:\"\
+    , statistics.mean(runtimes))\nprint(\"Std Dev:\", statistics.stdev(runtimes))"
+docker:
+  base_image: docker.io/sweperf/sweperf:pydata__xarray-7382
+  human_image: docker.io/sweperf/sweperf_annotate:pydata__xarray-7382
+  llm_image: PLACEHOLDER
+  commands:
+    run_base: docker run --rm --name bench_{id}_base --mount type=bind,src=<WORKLOAD_PY>,dst=/tmp/workload.py
+      {base_image} /bin/bash -lc 'python /tmp/workload.py' 2>&1
+    run_human: docker run --rm --name bench_{id}_human --mount type=bind,src=<WORKLOAD_PY>,dst=/tmp/workload.py
+      {human_image} /bin/bash -lc 'chmod +x /perf.sh && /perf.sh && python /tmp/workload.py'
+      2>&1
+    run_llm: echo 'LLM image not available yet for {id}. Please fill docker.llm_image.'
+metrics:
+  reducer: mean_std
+  parse_regex:
+    mean: (?i)\bMean:\s*([0-9.]+)
+    std: (?i)(Std Dev|SD):\s*([0-9.]+)
+notes:
+  user_notes: 'Before Mean: 0.6325477061563288
+
+    Before SD: 0.010473847587611279
+
+    After Mean: 0.0037559053600998596
+
+    After SD: 0.00010317088969610446
+
+    Improvement: -99.41%'
+  mike_notes: ''
+meta:
+  num_covering_tests: '27'

@@ -1,0 +1,139 @@
+id: scipy__scipy-22660
+status:
+  human: APPROVED
+  llm: COMING_SOON
+comparison:
+  llm_better: COMING_SOON
+repo:
+  org: scipy
+  name: scipy
+  url: https://github.com/scipy/scipy
+  pull_request: https://github.com/scipy/scipy/pull/22660
+  base_commit: bb9fdc6e82d3663edb519753f3bf4d6df686c5b1
+  created_at: '2025-03-09 19:37:03'
+  version: '1.15'
+workload:
+  language: python
+  code: "import timeit\nimport statistics\n\nimport numpy as np\nfrom scipy import\
+    \ sparse\nfrom scipy.optimize import linprog\nfrom scipy.sparse import csr_matrix\n\
+    \ndef coherent_linear_quantile_regression(\n    X,\n    y,\n    *,\n    quantiles,\n\
+    \    sample_weight = None,\n    coherence_buffer = 3,\n):\n    \"\"\"Solve a Coherent\
+    \ Linear Quantile Regression problem.\n\n    Minimizes the quantile loss:\n\n\
+    \        ∑ᵢ,ⱼ {\n                 qⱼ (yᵢ - ŷ⁽ʲ⁾ᵢ) : yᵢ ≥ ŷ⁽ʲ⁾ᵢ,\n            (1\
+    \ - qⱼ)(ŷ⁽ʲ⁾ᵢ - yᵢ) : ŷ⁽ʲ⁾ᵢ > yᵢ\n        }\n\n    for the linear model ŷ⁽ʲ⁾ :=\
+    \ Xβ⁽ʲ⁾, given an input dataset X, target y, and quantile ranks qⱼ.\n\n    We\
+    \ achieve so-called 'coherent' quantiles by enforcing monotonicity of the predicted\
+    \ quantiles\n    with the constraint Xβ⁽ʲ⁾ ≤ Xβ⁽ʲ⁺¹⁾ for each consecutive pair\
+    \ of quantile ranks in an extended\n    set of quantile ranks that comprises the\
+    \ requested quantile ranks and a number of auxiliary\n    quantile ranks in between.\n\
+    \n    The optimization problem is formulated as a linear program by introducing\
+    \ the auxiliary residual\n    vectors Δ⁽ʲ⁾⁺, Δ⁽ʲ⁾⁻ ≥ 0 so that Xβ⁽ʲ⁾ - y = Δ⁽ʲ⁾⁺\
+    \ - Δ⁽ʲ⁾⁻. The objective then becomes\n    ∑ᵢ,ⱼ qⱼΔ⁽ʲ⁾⁻ᵢ + (1 - qⱼ)Δ⁽ʲ⁾⁺ᵢ + αt⁽ʲ⁾ᵢ\
+    \ for t⁽ʲ⁾ := |β⁽ʲ⁾|. The L1 regularization parameter α is\n    automatically\
+    \ determined to minimize the impact on the solution β.\n\n    Parameters\n   \
+    \ ----------\n    X\n        The feature matrix.\n    y\n        The target values.\n\
+    \    quantiles\n        The quantiles to estimate (between 0 and 1).\n    sample_weight\n\
+    \        The optional sample weight to use for each sample.\n    coherence_buffer\n\
+    \        The number of auxiliary quantiles to introduce. Smaller is faster, larger\
+    \ yields more\n        coherent quantiles.\n\n    Returns\n    -------\n    β\n\
+    \        The estimated regression coefficients so that Xβ produces quantile predictions\
+    \ ŷ.\n    β_full\n        The estimated regression coefficients including all\
+    \ auxiliary quantiles.\n    \"\"\"\n    # Learn the input dimensions.\n    num_samples,\
+    \ num_features = X.shape\n    # Add buffer quantile ranks in between the given\
+    \ quantile ranks so that we have an even stronger\n    # guarantee on the monotonicity\
+    \ of the predicted quantiles.\n    quantiles = np.interp(\n        x=np.linspace(0,\
+    \ len(quantiles) - 1, (len(quantiles) - 1) * (1 + coherence_buffer) + 1),\n  \
+    \      xp=np.arange(len(quantiles)),\n        fp=quantiles,\n    ).astype(quantiles.dtype)\n\
+    \    num_quantiles = len(quantiles)\n    # Validate the input.\n    assert np.array_equal(quantiles,\
+    \ np.sort(quantiles)), \"Quantile ranks must be sorted.\"\n    assert sample_weight\
+    \ is None or np.all(sample_weight >= 0), \"Sample weights must be >= 0.\"\n  \
+    \  # Normalise the sample weights.\n    sample_weight = np.ones(num_samples, dtype=y.dtype)\
+    \ if sample_weight is None else sample_weight\n    sample_weight /= np.sum(sample_weight)\n\
+    \    eps = np.finfo(y.dtype).eps\n    α = eps**0.25 / (num_quantiles * num_features)\n\
+    \    # Construct the objective function ∑ᵢ,ⱼ qⱼΔ⁽ʲ⁾⁻ᵢ + (1 - qⱼ)Δ⁽ʲ⁾⁺ᵢ + αt⁽ʲ⁾ᵢ\
+    \ for t⁽ʲ⁾ := |β⁽ʲ⁾|.\n    c = np.hstack(\n        [\n            np.zeros(num_quantiles\
+    \ * num_features, dtype=y.dtype),  # β⁽ʲ⁾ for each qⱼ\n            α * np.ones(num_quantiles\
+    \ * num_features, dtype=y.dtype),  # t⁽ʲ⁾ for each qⱼ\n            np.kron((1\
+    \ - quantiles) / num_quantiles, sample_weight),  # Δ⁽ʲ⁾⁺ for each qⱼ\n       \
+    \     np.kron(quantiles / num_quantiles, sample_weight),  # Δ⁽ʲ⁾⁻ for each qⱼ\n\
+    \        ]\n    )\n    # Construct the equalities Xβ⁽ʲ⁾ - y = Δ⁽ʲ⁾⁺ - Δ⁽ʲ⁾⁻ for\
+    \ each quantile rank qⱼ.\n    A_eq = sparse.hstack(\n        [\n            #\
+    \ Xβ⁽ʲ⁾ for each qⱼ (block diagonal matrix)\n            sparse.kron(sparse.eye(num_quantiles,\
+    \ dtype=X.dtype), X),\n            # t⁽ʲ⁾ not used in this constraint\n      \
+    \      csr_matrix((num_quantiles * num_samples, num_quantiles * num_features),\
+    \ dtype=X.dtype),\n            # -Δ⁽ʲ⁾⁺ for each qⱼ (block diagonal matrix)\n\
+    \            -sparse.eye(num_quantiles * num_samples, dtype=X.dtype),\n      \
+    \      # Δ⁽ʲ⁾⁻ for each qⱼ (block diagonal matrix)\n            sparse.eye(num_quantiles\
+    \ * num_samples, dtype=X.dtype),\n        ]\n    )\n    b_eq = np.tile(y, num_quantiles)\n\
+    \    # Construct the inequalities -t⁽ʲ⁾ <= β⁽ʲ⁾ <= t⁽ʲ⁾ for each quantile rank\
+    \ qⱼ so that\n    # t⁽ʲ⁾ := |β⁽ʲ⁾|. Also construct the monotonicity constraint\
+    \ Xβ⁽ʲ⁾ <= Xβ⁽ʲ⁺¹⁾ for each qⱼ,\n    # equivalent to Δ⁽ʲ⁾⁺ - Δ⁽ʲ⁾⁻ <= Δ⁽ʲ⁺¹⁾⁺\
+    \ - Δ⁽ʲ⁺¹⁾⁻.\n    zeros_Δ = csr_matrix(\n        (num_quantiles * num_features,\
+    \ 2 * num_quantiles * num_samples), dtype=X.dtype\n    )\n    zeros_βt = csr_matrix(\n\
+    \        ((num_quantiles - 1) * num_samples, 2 * num_quantiles * num_features),\
+    \ dtype=X.dtype\n    )\n    A_ub = sparse.vstack(\n        [\n            sparse.hstack(\n\
+    \                [\n                    sparse.eye(num_quantiles * num_features,\
+    \ dtype=X.dtype),  # β⁽ʲ⁾\n                    -sparse.eye(num_quantiles * num_features,\
+    \ dtype=X.dtype),  # -t⁽ʲ⁾\n                    zeros_Δ,  # Δ⁽ʲ⁾⁺ and Δ⁽ʲ⁾⁺ not\
+    \ used for this constraint\n                ]\n            ),\n            sparse.hstack(\n\
+    \                [\n                    -sparse.eye(num_quantiles * num_features,\
+    \ dtype=X.dtype),  # -β⁽ʲ⁾\n                    -sparse.eye(num_quantiles * num_features,\
+    \ dtype=X.dtype),  # -t⁽ʲ⁾\n                    zeros_Δ,  # Δ⁽ʲ⁾⁺ and Δ⁽ʲ⁾⁺ not\
+    \ used for this constraint\n                ]\n            ),\n            sparse.hstack(\n\
+    \                [\n                    zeros_βt,\n                    sparse.kron(\n\
+    \                        sparse.diags(\n                            diagonals=[1,\
+    \ -1],  # Δ⁽ʲ⁾⁺ - Δ⁽ʲ⁺¹⁾⁺\n                            offsets=[0, 1],\n     \
+    \                       shape=(num_quantiles - 1, num_quantiles),\n          \
+    \                  dtype=X.dtype,\n                        ),\n              \
+    \          sparse.eye(num_samples, dtype=X.dtype),\n                    ),\n \
+    \                   sparse.kron(\n                        sparse.diags(\n    \
+    \                        diagonals=[-1, 1],  # -Δ⁽ʲ⁾⁻ + Δ⁽ʲ⁺¹⁾⁻\n            \
+    \                offsets=[0, 1],\n                            shape=(num_quantiles\
+    \ - 1, num_quantiles),\n                            dtype=X.dtype,\n         \
+    \               ),\n                        sparse.eye(num_samples, dtype=X.dtype),\n\
+    \                    ),\n                ]\n            ),\n        ]\n    )\n\
+    \    b_ub = np.zeros(A_ub.shape[0], dtype=X.dtype)\n    # Construct the bounds.\n\
+    \    bounds = (\n        ([(None, None)] * num_quantiles * num_features)  # β⁽ʲ⁾\
+    \ for each qⱼ\n        + ([(0, None)] * num_quantiles * num_features)  # t⁽ʲ⁾\
+    \ for each qⱼ\n        + ([(0, None)] * num_quantiles * num_samples)  # Δ⁽ʲ⁾⁺\
+    \ for each qⱼ\n        + ([(0, None)] * num_quantiles * num_samples)  # Δ⁽ʲ⁾⁻\
+    \ for each qⱼ\n    )\n    # Solve the Coherent Quantile Regression LP.\n    result\
+    \ = linprog(c=c, A_ub=A_ub, b_ub=b_ub, A_eq=A_eq, b_eq=b_eq, bounds=bounds, method=\"\
+    highs\")\n    # Extract the solution.\n    β_full = result.x[: num_quantiles *\
+    \ num_features].astype(y.dtype)\n    β_full = β_full.reshape(num_quantiles, num_features).T\n\
+    \    # Drop the buffer quantile ranks we introduced earlier.\n    β = β_full[:,\
+    \ 0 :: (coherence_buffer + 1)]\n    return β, β_full\n\nnp.random.seed(42)\nn,\
+    \ d = 500, 5\nX = np.random.randn(n, d)\ny = np.random.randn(n)\nquantiles = np.asarray((0.25,\
+    \ 0.5, 0.75))\n\ndef workload():\n    coherent_linear_quantile_regression(X, y,\
+    \ quantiles=quantiles)\n\nruntimes = timeit.repeat(workload, number=1, repeat=3)\n\
+    \nprint(\"Mean:\", statistics.mean(runtimes))\nprint(\"Std Dev:\", statistics.stdev(runtimes))\n\
+    \n"
+docker:
+  base_image: docker.io/sweperf/sweperf:scipy__scipy-22660
+  human_image: docker.io/sweperf/sweperf_annotate:scipy__scipy-22660
+  llm_image: PLACEHOLDER
+  commands:
+    run_base: docker run --rm --name bench_{id}_base --mount type=bind,src=<WORKLOAD_PY>,dst=/tmp/workload.py
+      {base_image} /bin/bash -lc 'python /tmp/workload.py' 2>&1
+    run_human: docker run --rm --name bench_{id}_human --mount type=bind,src=<WORKLOAD_PY>,dst=/tmp/workload.py
+      {human_image} /bin/bash -lc 'chmod +x /perf.sh && /perf.sh && python /tmp/workload.py'
+      2>&1
+    run_llm: echo 'LLM image not available yet for {id}. Please fill docker.llm_image.'
+metrics:
+  reducer: mean_std
+  parse_regex:
+    mean: (?i)\bMean:\s*([0-9.]+)
+    std: (?i)(Std Dev|SD):\s*([0-9.]+)
+notes:
+  user_notes: 'Before Mean: 33.84564793532869
+
+    Before SD: 0.06715501305965321
+
+    After Mean: 1.0454948906747934
+
+    After SD: 0.03822919011083646
+
+    Improvement: -96.91%'
+  mike_notes: ''
+meta:
+  num_covering_tests: '2'

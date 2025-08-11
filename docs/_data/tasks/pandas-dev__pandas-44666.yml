@@ -1,0 +1,59 @@
+id: pandas-dev__pandas-44666
+status:
+  human: APPROVED
+  llm: COMING_SOON
+comparison:
+  llm_better: COMING_SOON
+repo:
+  org: pandas-dev
+  name: pandas
+  url: https://github.com/pandas-dev/pandas
+  pull_request: https://github.com/pandas-dev/pandas/pull/44666
+  base_commit: 7b78b730aee122bb7d6e90723c4208da234de19e
+  created_at: '2021-11-29 7:40:44'
+  version: '1.3'
+workload:
+  language: python
+  code: "import timeit\nimport statistics\n\nimport numpy as np\nimport pandas as\
+    \ pd\n\nN = 10 ** 3\ndf2 = pd.DataFrame(\n    {\n        c: {\n            0:\
+    \ np.random.randint(0, 2, N).astype(np.bool_),\n            1: np.random.randint(0,\
+    \ N, N).astype(np.int16),\n            2: np.random.randint(0, N, N).astype(np.int32),\n\
+    \            3: np.random.randint(0, N, N).astype(np.int64),\n        }[np.random.randint(0,\
+    \ 4)]\n        for c in range(N)\n    }\n)\nidx2 = np.random.permutation(range(1200))\n\
+    df2_am1 = df2._as_manager(\"array\").copy()\n\n\ndtype = 'int'\nm = 100\nn = 1000\n\
+    \nlevels = np.arange(m)\nindex = pd.MultiIndex.from_product([levels] * 2)\ncolumns\
+    \ = np.arange(n)\nvalues = np.arange(m * m * n).reshape(m * m, n)\n\ndf = pd.DataFrame(values,\
+    \ index, columns)\ndf2 = df.iloc[:-1]\ndf2_am2 = df2._as_manager(\"array\").copy()\n\
+    \ndef workload():\n    for i in range(20):\n        df2_am1.reindex(idx2)\n  \
+    \      \n    df2_am2.unstack()\n    \nruntimes = timeit.repeat(workload, number=1,\
+    \ repeat=20)\n\n# Print runtime mean and std deviation.\nprint(\"Mean:\", statistics.mean(runtimes))\n\
+    print(\"Std Dev:\", statistics.stdev(runtimes))\n"
+docker:
+  base_image: docker.io/sweperf/sweperf:pandas-dev__pandas-44666
+  human_image: docker.io/sweperf/sweperf_annotate:pandas-dev__pandas-44666
+  llm_image: PLACEHOLDER
+  commands:
+    run_base: docker run --rm --name bench_{id}_base --mount type=bind,src=<WORKLOAD_PY>,dst=/tmp/workload.py
+      {base_image} /bin/bash -lc 'python /tmp/workload.py' 2>&1
+    run_human: docker run --rm --name bench_{id}_human --mount type=bind,src=<WORKLOAD_PY>,dst=/tmp/workload.py
+      {human_image} /bin/bash -lc 'chmod +x /perf.sh && /perf.sh && python /tmp/workload.py'
+      2>&1
+    run_llm: echo 'LLM image not available yet for {id}. Please fill docker.llm_image.'
+metrics:
+  reducer: mean_std
+  parse_regex:
+    mean: (?i)\bMean:\s*([0-9.]+)
+    std: (?i)(Std Dev|SD):\s*([0-9.]+)
+notes:
+  user_notes: 'Before Mean: 0.6809505595942028
+
+    Before SD: 0.022657732133781028
+
+    After Mean: 0.28632162664725913
+
+    After SD: 0.017625450372798335
+
+    Improvement: -57.95%'
+  mike_notes: ''
+meta:
+  num_covering_tests: '870'

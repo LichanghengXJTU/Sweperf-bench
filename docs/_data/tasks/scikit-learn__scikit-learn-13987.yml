@@ -1,0 +1,54 @@
+id: scikit-learn__scikit-learn-13987
+status:
+  human: APPROVED
+  llm: COMING_SOON
+comparison:
+  llm_better: COMING_SOON
+repo:
+  org: scikit-learn
+  name: scikit-learn
+  url: https://github.com/scikit-learn/scikit-learn
+  pull_request: https://github.com/scikit-learn/scikit-learn/pull/13987
+  base_commit: 3ed200292fe17ff78e388c307a721ed0e707ca76
+  created_at: '2019-05-30 8:56:24'
+  version: '0.22'
+workload:
+  language: python
+  code: "import timeit\nimport statistics\n\nimport numpy as np\n\nfrom sklearn.datasets\
+    \ import make_classification\nfrom sklearn.preprocessing import StandardScaler\n\
+    \nn_samples = 10000\nn_features = 10000\nn_classes = 10\ndtype = np.float32\n\n\
+    X, y = make_classification(\n    n_samples=n_samples,\n    n_features=n_features,\n\
+    \    n_classes=n_classes,\n    random_state=0,\n    n_informative=n_features,\n\
+    \    n_redundant=0,\n)\nX = X.astype(dtype, copy=False)\n    \ndef workload():\n\
+    \    StandardScaler().fit_transform(X)\n\nruntimes = timeit.repeat(workload, number=1,\
+    \ repeat=10)\n\n# Print runtime mean and std deviation.\nprint(\"Mean:\", statistics.mean(runtimes))\n\
+    print(\"Std Dev:\", statistics.stdev(runtimes))\n    "
+docker:
+  base_image: docker.io/sweperf/sweperf:scikit-learn__scikit-learn-13987
+  human_image: docker.io/sweperf/sweperf_annotate:scikit-learn__scikit-learn-13987
+  llm_image: PLACEHOLDER
+  commands:
+    run_base: docker run --rm --name bench_{id}_base --mount type=bind,src=<WORKLOAD_PY>,dst=/tmp/workload.py
+      {base_image} /bin/bash -lc 'python /tmp/workload.py' 2>&1
+    run_human: docker run --rm --name bench_{id}_human --mount type=bind,src=<WORKLOAD_PY>,dst=/tmp/workload.py
+      {human_image} /bin/bash -lc 'chmod +x /perf.sh && /perf.sh && python /tmp/workload.py'
+      2>&1
+    run_llm: echo 'LLM image not available yet for {id}. Please fill docker.llm_image.'
+metrics:
+  reducer: mean_std
+  parse_regex:
+    mean: (?i)\bMean:\s*([0-9.]+)
+    std: (?i)(Std Dev|SD):\s*([0-9.]+)
+notes:
+  user_notes: 'Before Mean: 1.6323647787969093
+
+    Before SD: 0.014408780632642566
+
+    After Mean: 1.4919799095892814
+
+    After SD: 0.0018470552687454094
+
+    Improvement: -8.60%'
+  mike_notes: ''
+meta:
+  num_covering_tests: '5'

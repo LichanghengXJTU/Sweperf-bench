@@ -1,0 +1,51 @@
+id: numpy__numpy-11720
+status:
+  human: APPROVED
+  llm: COMING_SOON
+comparison:
+  llm_better: COMING_SOON
+repo:
+  org: numpy
+  name: numpy
+  url: https://github.com/numpy/numpy
+  pull_request: https://github.com/numpy/numpy/pull/11720
+  base_commit: ada168000ee3a6727af4eb02cf2443edbf58e962
+  created_at: '2018-08-12 16:07:07'
+  version: '1.15'
+workload:
+  language: python
+  code: "import timeit\nimport statistics\n\nimport numpy as np\n\nb = np.random.random((5,\
+    \ 2))\nt = np.random.random((5, 5, 2))\np = np.random.random((2, 5))\n\ndef workload():\n\
+    \    out = np.einsum('ij,ixy,ji->xy', b, t, p)\n\nruntimes = timeit.repeat(workload,\
+    \ number=100, repeat=10**4)\n\n# Print runtime mean and std deviation.\nprint(\"\
+    Mean:\", statistics.mean(runtimes))\nprint(\"Std Dev:\", statistics.stdev(runtimes))\n\
+    \n"
+docker:
+  base_image: docker.io/sweperf/sweperf:numpy__numpy-11720
+  human_image: docker.io/sweperf/sweperf_annotate:numpy__numpy-11720
+  llm_image: PLACEHOLDER
+  commands:
+    run_base: docker run --rm --name bench_{id}_base --mount type=bind,src=<WORKLOAD_PY>,dst=/tmp/workload.py
+      {base_image} /bin/bash -lc 'python /tmp/workload.py' 2>&1
+    run_human: docker run --rm --name bench_{id}_human --mount type=bind,src=<WORKLOAD_PY>,dst=/tmp/workload.py
+      {human_image} /bin/bash -lc 'chmod +x /perf.sh && /perf.sh && python /tmp/workload.py'
+      2>&1
+    run_llm: echo 'LLM image not available yet for {id}. Please fill docker.llm_image.'
+metrics:
+  reducer: mean_std
+  parse_regex:
+    mean: (?i)\bMean:\s*([0-9.]+)
+    std: (?i)(Std Dev|SD):\s*([0-9.]+)
+notes:
+  user_notes: 'Before Mean: 0.007506608858133841
+
+    Before SD: 1.7004217204785464e-05
+
+    After Mean: 0.00022913117294898257
+
+    After SD: 2.9526440948326743e-05
+
+    Improvement: -96.95%'
+  mike_notes: ''
+meta:
+  num_covering_tests: '8'

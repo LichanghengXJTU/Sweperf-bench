@@ -1,0 +1,53 @@
+id: sympy__sympy-21501
+status:
+  human: APPROVED
+  llm: COMING_SOON
+comparison:
+  llm_better: COMING_SOON
+repo:
+  org: sympy
+  name: sympy
+  url: https://github.com/sympy/sympy
+  pull_request: https://github.com/sympy/sympy/pull/21501
+  base_commit: 65e1ad3d48ca445b91386c39fe18c482d2e48b4e
+  created_at: '2021-05-22 1:25:11'
+  version: '1.9'
+workload:
+  language: python
+  code: "import timeit\nimport statistics\nfrom sympy.polys.matrices import DomainMatrix\n\
+    from sympy import Matrix\nfrom sympy.polys.specialpolys import random_poly\nfrom\
+    \ sympy.abc import x, y\nfrom sympy.core.cache import clear_cache\n\ndef setup():\n\
+    \    global M, dM\n    clear_cache()\n    M = Matrix([[random_poly(x, 2, -5, 5)/random_poly(y,\
+    \ 2, -5, 5) for _ in range(4)] for _ in range(4)])\n    dM = DomainMatrix.from_Matrix(M)\n\
+    \ndef workload():\n    global dM\n    _ = dM.det()\n\nruntimes = timeit.repeat(workload,\
+    \ number=1, repeat=25, setup=setup)\n\nprint(\"Mean:\", statistics.mean(runtimes))\n\
+    print(\"Std Dev:\", statistics.stdev(runtimes))"
+docker:
+  base_image: docker.io/sweperf/sweperf:sympy__sympy-21501
+  human_image: docker.io/sweperf/sweperf_annotate:sympy__sympy-21501
+  llm_image: PLACEHOLDER
+  commands:
+    run_base: docker run --rm --name bench_{id}_base --mount type=bind,src=<WORKLOAD_PY>,dst=/tmp/workload.py
+      {base_image} /bin/bash -lc 'python /tmp/workload.py' 2>&1
+    run_human: docker run --rm --name bench_{id}_human --mount type=bind,src=<WORKLOAD_PY>,dst=/tmp/workload.py
+      {human_image} /bin/bash -lc 'chmod +x /perf.sh && /perf.sh && python /tmp/workload.py'
+      2>&1
+    run_llm: echo 'LLM image not available yet for {id}. Please fill docker.llm_image.'
+metrics:
+  reducer: mean_std
+  parse_regex:
+    mean: (?i)\bMean:\s*([0-9.]+)
+    std: (?i)(Std Dev|SD):\s*([0-9.]+)
+notes:
+  user_notes: 'Before Mean: 1.3213787127658725
+
+    Before SD: 0.6312409648225765
+
+    After Mean: 0.07195615640375763
+
+    After SD: 0.0035433786159779165
+
+    Improvement: -94.55%'
+  mike_notes: ''
+meta:
+  num_covering_tests: '4'

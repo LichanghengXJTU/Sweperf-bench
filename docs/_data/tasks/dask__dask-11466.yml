@@ -1,0 +1,56 @@
+id: dask__dask-11466
+status:
+  human: APPROVED
+  llm: COMING_SOON
+comparison:
+  llm_better: COMING_SOON
+repo:
+  org: dask
+  name: dask
+  url: https://github.com/dask/dask
+  pull_request: https://github.com/dask/dask/pull/11466
+  base_commit: 5c9ccb18e1948a477b3054985273c366f554dc4e
+  created_at: '2024-10-29 15:54:57'
+  version: '2024.1'
+workload:
+  language: python
+  code: "import timeit\nimport statistics\n\nfrom dask import delayed\nimport random\n\
+    \nN_LAYERS = 50\nWIDTH = 100\n\ndef generate_deep_graph(n_layers, width):\n  \
+    \  base = [delayed(lambda x: x)(i) for i in range(width)]\n    layers = [base]\n\
+    \n    for _ in range(n_layers):\n        prev_layer = layers[-1]\n        next_layer\
+    \ = [\n            delayed(lambda *args: sum(args))(*random.sample(prev_layer,\
+    \ k=3))\n            for _ in range(width)\n        ]\n        layers.append(next_layer)\n\
+    \n    return layers[-1]\n\ndef setup():\n    global final_sum\n    random.seed(42)\n\
+    \    final_layer = generate_deep_graph(N_LAYERS, WIDTH)\n    final_sum = delayed(sum)(final_layer)\n\
+    \ndef workload():\n    global final_sum\n    final_sum.compute()\n\nruntimes =\
+    \ timeit.repeat(workload, number=1, repeat=20, setup=setup)\n\nprint(\"Mean:\"\
+    , statistics.mean(runtimes))\nprint(\"Std Dev:\", statistics.stdev(runtimes))\n"
+docker:
+  base_image: docker.io/sweperf/sweperf:dask__dask-11466
+  human_image: docker.io/sweperf/sweperf_annotate:dask__dask-11466
+  llm_image: PLACEHOLDER
+  commands:
+    run_base: docker run --rm --name bench_{id}_base --mount type=bind,src=<WORKLOAD_PY>,dst=/tmp/workload.py
+      {base_image} /bin/bash -lc 'python /tmp/workload.py' 2>&1
+    run_human: docker run --rm --name bench_{id}_human --mount type=bind,src=<WORKLOAD_PY>,dst=/tmp/workload.py
+      {human_image} /bin/bash -lc 'chmod +x /perf.sh && /perf.sh && python /tmp/workload.py'
+      2>&1
+    run_llm: echo 'LLM image not available yet for {id}. Please fill docker.llm_image.'
+metrics:
+  reducer: mean_std
+  parse_regex:
+    mean: (?i)\bMean:\s*([0-9.]+)
+    std: (?i)(Std Dev|SD):\s*([0-9.]+)
+notes:
+  user_notes: 'Before Mean: 0.3848998707457213
+
+    Before SD: 0.005694867803414778
+
+    After Mean: 0.3569968188996427
+
+    After SD: 0.008727389537422017
+
+    Improvement: -7.25%'
+  mike_notes: ''
+meta:
+  num_covering_tests: '35'

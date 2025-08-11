@@ -1,0 +1,51 @@
+id: scipy__scipy-19749
+status:
+  human: APPROVED
+  llm: COMING_SOON
+comparison:
+  llm_better: COMING_SOON
+repo:
+  org: scipy
+  name: scipy
+  url: https://github.com/scipy/scipy
+  pull_request: https://github.com/scipy/scipy/pull/19749
+  base_commit: c77938cd5efc24c0a87867dbd5a37b85889e19cd
+  created_at: '2023-12-24 1:36:51'
+  version: '1.12'
+workload:
+  language: python
+  code: "\nimport timeit\nimport statistics\nimport numpy as np\nfrom scipy import\
+    \ stats\n\ndef setup():\n    global x, y\n    rng = np.random.default_rng(2549824598234528)\n\
+    \    x = rng.integers(5, size=(10,1))\n    y = rng.integers(5, size=(4000,20000))\n\
+    \    \ndef workload():\n    global x, y\n    _ = stats.mannwhitneyu(x, y)\n\n\
+    runtimes = timeit.repeat(workload, number=1, repeat=10, setup=setup)\n\nprint(\"\
+    Mean:\", statistics.mean(runtimes[-5:]))\nprint(\"Std Dev:\", statistics.stdev(runtimes[-5:]))"
+docker:
+  base_image: docker.io/sweperf/sweperf:scipy__scipy-19749
+  human_image: docker.io/sweperf/sweperf_annotate:scipy__scipy-19749
+  llm_image: PLACEHOLDER
+  commands:
+    run_base: docker run --rm --name bench_{id}_base --mount type=bind,src=<WORKLOAD_PY>,dst=/tmp/workload.py
+      {base_image} /bin/bash -lc 'python /tmp/workload.py' 2>&1
+    run_human: docker run --rm --name bench_{id}_human --mount type=bind,src=<WORKLOAD_PY>,dst=/tmp/workload.py
+      {human_image} /bin/bash -lc 'chmod +x /perf.sh && /perf.sh && python /tmp/workload.py'
+      2>&1
+    run_llm: echo 'LLM image not available yet for {id}. Please fill docker.llm_image.'
+metrics:
+  reducer: mean_std
+  parse_regex:
+    mean: (?i)\bMean:\s*([0-9.]+)
+    std: (?i)(Std Dev|SD):\s*([0-9.]+)
+notes:
+  user_notes: 'Before Mean: 25.1835427729995
+
+    Before SD: 0.11989253916688174
+
+    After Mean: 3.6584269520069936
+
+    After SD: 0.03429178527892171
+
+    Improvement: -85.47%'
+  mike_notes: ''
+meta:
+  num_covering_tests: '32'

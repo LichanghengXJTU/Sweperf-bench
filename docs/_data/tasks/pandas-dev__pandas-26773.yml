@@ -1,0 +1,59 @@
+id: pandas-dev__pandas-26773
+status:
+  human: APPROVED
+  llm: COMING_SOON
+comparison:
+  llm_better: COMING_SOON
+repo:
+  org: pandas-dev
+  name: pandas
+  url: https://github.com/pandas-dev/pandas
+  pull_request: https://github.com/pandas-dev/pandas/pull/26773
+  base_commit: c64c9cb44222a42f7b02d4d6007919cd0645f1be
+  created_at: '2019-06-10 19:11:37'
+  version: '0.24'
+workload:
+  language: python
+  code: "\nimport timeit\nimport statistics\n\nimport pandas as pd\nimport numpy as\
+    \ np\nimport tempfile\nimport os\n\ntempfile_path_int= tempfile.NamedTemporaryFile(suffix=\"\
+    .json\", delete=False).name\ntempfile_path_datetime = tempfile.NamedTemporaryFile(suffix=\"\
+    .json\", delete=False).name\n\nN = 100000\norient = \"index\"\nindexes = {\n \
+    \   \"int\": np.arange(N),\n    \"datetime\": pd.date_range(\"20000101\", periods=N,\
+    \ freq=\"H\"),\n}\ndf_int = pd.DataFrame(\n    np.random.randn(N, 5),\n    columns=[\"\
+    float_{}\".format(i) for i in range(5)],\n    index=indexes['int'],\n)\ndf_datetime\
+    \ = pd.DataFrame(\n    np.random.randn(N, 5),\n    columns=[\"float_{}\".format(i)\
+    \ for i in range(5)],\n    index=indexes['datetime'],\n)\n\ndf_int.to_json(tempfile_path_int,\
+    \ orient=orient)\ndf_datetime.to_json(tempfile_path_datetime, orient=orient)\n\
+    \ndef workload():\n    _ = pd.read_json(tempfile_path_int, orient=orient)\n  \
+    \  _ = pd.read_json(tempfile_path_datetime, orient=orient)\n\nruntimes = timeit.repeat(workload,\
+    \ number=1, repeat=10)\n\nos.remove(tempfile_path_int)\nos.remove(tempfile_path_datetime)\n\
+    \nprint(\"Mean:\", statistics.mean(runtimes))\nprint(\"Std Dev:\", statistics.stdev(runtimes))"
+docker:
+  base_image: docker.io/sweperf/sweperf:pandas-dev__pandas-26773
+  human_image: docker.io/sweperf/sweperf_annotate:pandas-dev__pandas-26773
+  llm_image: PLACEHOLDER
+  commands:
+    run_base: docker run --rm --name bench_{id}_base --mount type=bind,src=<WORKLOAD_PY>,dst=/tmp/workload.py
+      {base_image} /bin/bash -lc 'python /tmp/workload.py' 2>&1
+    run_human: docker run --rm --name bench_{id}_human --mount type=bind,src=<WORKLOAD_PY>,dst=/tmp/workload.py
+      {human_image} /bin/bash -lc 'chmod +x /perf.sh && /perf.sh && python /tmp/workload.py'
+      2>&1
+    run_llm: echo 'LLM image not available yet for {id}. Please fill docker.llm_image.'
+metrics:
+  reducer: mean_std
+  parse_regex:
+    mean: (?i)\bMean:\s*([0-9.]+)
+    std: (?i)(Std Dev|SD):\s*([0-9.]+)
+notes:
+  user_notes: 'Before Mean: 5.773207039985573
+
+    Before SD: 0.0328531546564316
+
+    After Mean: 1.3726399181934539
+
+    After SD: 0.068006702008551
+
+    Improvement: -76.22%'
+  mike_notes: ''
+meta:
+  num_covering_tests: '6'

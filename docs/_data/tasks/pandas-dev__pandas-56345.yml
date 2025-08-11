@@ -1,0 +1,53 @@
+id: pandas-dev__pandas-56345
+status:
+  human: APPROVED
+  llm: COMING_SOON
+comparison:
+  llm_better: COMING_SOON
+repo:
+  org: pandas-dev
+  name: pandas
+  url: https://github.com/pandas-dev/pandas
+  pull_request: https://github.com/pandas-dev/pandas/pull/56345
+  base_commit: c99981a0266d12fb00eaa6a43d89322298425d7f
+  created_at: '2023-12-05 22:34:16'
+  version: '2.1'
+workload:
+  language: python
+  code: "import timeit\nimport statistics\n\nimport pandas as pd\nimport numpy as\
+    \ np\n\ncategories = [f\"cat_{i:03}\" for i in range(1000)]\n\nidx1 = pd.CategoricalIndex(np.repeat(categories,\
+    \ 1000), categories=categories)\nidx2 = pd.CategoricalIndex(categories[100:200],\
+    \ categories=reversed(categories))\n\ndf1 = pd.DataFrame({\"val1\": 1}, index=idx1)\n\
+    df2 = pd.DataFrame({\"val2\": 2}, index=idx2)\n\ndef workload():\n    df1.join(df2)\n\
+    \    \nruntimes = timeit.repeat(workload, number=5, repeat=100)\n\n# Print runtime\
+    \ mean and std deviation.\nprint(\"Mean:\", statistics.mean(runtimes))\nprint(\"\
+    Std Dev:\", statistics.stdev(runtimes))\n"
+docker:
+  base_image: docker.io/sweperf/sweperf:pandas-dev__pandas-56345
+  human_image: docker.io/sweperf/sweperf_annotate:pandas-dev__pandas-56345
+  llm_image: PLACEHOLDER
+  commands:
+    run_base: docker run --rm --name bench_{id}_base --mount type=bind,src=<WORKLOAD_PY>,dst=/tmp/workload.py
+      {base_image} /bin/bash -lc 'python /tmp/workload.py' 2>&1
+    run_human: docker run --rm --name bench_{id}_human --mount type=bind,src=<WORKLOAD_PY>,dst=/tmp/workload.py
+      {human_image} /bin/bash -lc 'chmod +x /perf.sh && /perf.sh && python /tmp/workload.py'
+      2>&1
+    run_llm: echo 'LLM image not available yet for {id}. Please fill docker.llm_image.'
+metrics:
+  reducer: mean_std
+  parse_regex:
+    mean: (?i)\bMean:\s*([0-9.]+)
+    std: (?i)(Std Dev|SD):\s*([0-9.]+)
+notes:
+  user_notes: 'Before Mean: 0.27355116421997083
+
+    Before SD: 0.002785000961315163
+
+    After Mean: 0.04865476089180447
+
+    After SD: 0.0021258523289037425
+
+    Improvement: -82.21%'
+  mike_notes: ''
+meta:
+  num_covering_tests: '953'

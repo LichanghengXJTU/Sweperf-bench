@@ -1,0 +1,61 @@
+id: pandas-dev__pandas-50078
+status:
+  human: APPROVED
+  llm: COMING_SOON
+comparison:
+  llm_better: COMING_SOON
+repo:
+  org: pandas-dev
+  name: pandas
+  url: https://github.com/pandas-dev/pandas
+  pull_request: https://github.com/pandas-dev/pandas/pull/50078
+  base_commit: 1c71d7db926f4247798a7182f85aba1124fa894f
+  created_at: '2022-12-06 0:26:36'
+  version: '1.5'
+workload:
+  language: python
+  code: "import timeit\nimport statistics\n\nimport pandas as pd\nimport numpy as\
+    \ np\nimport pandas._testing as tm\n\nN = 10**6\ndtypes = [\n    \"Float64\",\n\
+    \    \"Int64\",\n    \"int64[pyarrow]\",\n    \"string\",\n    \"string[pyarrow]\"\
+    ,\n]\nmethod = None\n\n# Prepare list of (Series, fill_value, dtype)\ndata_series\
+    \ = []\n\nfor dtype in dtypes:\n    if dtype == \"datetime64[ns]\":\n        data\
+    \ = pd.date_range(\"2000-01-01\", freq=\"S\", periods=N)\n        na_value = pd.NaT\n\
+    \    elif dtype in (\"float64\", \"Float64\"):\n        data = np.random.randn(N)\n\
+    \        na_value = np.nan\n    elif dtype in (\"Int64\", \"int64[pyarrow]\"):\n\
+    \        data = np.arange(N)\n        na_value = pd.NA\n    elif dtype in (\"\
+    string\", \"string[pyarrow]\"):\n        data = tm.rands_array(5, N)\n       \
+    \ na_value = pd.NA\n\n    fill_value = data[0]\n    ser = pd.Series(data, dtype=dtype)\n\
+    \    ser[::2] = na_value\n    data_series.append((ser, fill_value))\n\ndef workload():\n\
+    \    for ser, fill_value in data_series:\n        ser.fillna(value=fill_value,\
+    \ method=None)\n    \nruntimes = timeit.repeat(workload, number=5, repeat=100)\n\
+    \n# Print runtime mean and std deviation.\nprint(\"Mean:\", statistics.mean(runtimes))\n\
+    print(\"Std Dev:\", statistics.stdev(runtimes))\n"
+docker:
+  base_image: docker.io/sweperf/sweperf:pandas-dev__pandas-50078
+  human_image: docker.io/sweperf/sweperf_annotate:pandas-dev__pandas-50078
+  llm_image: PLACEHOLDER
+  commands:
+    run_base: docker run --rm --name bench_{id}_base --mount type=bind,src=<WORKLOAD_PY>,dst=/tmp/workload.py
+      {base_image} /bin/bash -lc 'python /tmp/workload.py' 2>&1
+    run_human: docker run --rm --name bench_{id}_human --mount type=bind,src=<WORKLOAD_PY>,dst=/tmp/workload.py
+      {human_image} /bin/bash -lc 'chmod +x /perf.sh && /perf.sh && python /tmp/workload.py'
+      2>&1
+    run_llm: echo 'LLM image not available yet for {id}. Please fill docker.llm_image.'
+metrics:
+  reducer: mean_std
+  parse_regex:
+    mean: (?i)\bMean:\s*([0-9.]+)
+    std: (?i)(Std Dev|SD):\s*([0-9.]+)
+notes:
+  user_notes: 'Before Mean: 0.792284425116377
+
+    Before SD: 0.01652029550550107
+
+    After Mean: 0.41685231126262806
+
+    After SD: 0.007203069014138255
+
+    Improvement: -47.39%'
+  mike_notes: ''
+meta:
+  num_covering_tests: '28'

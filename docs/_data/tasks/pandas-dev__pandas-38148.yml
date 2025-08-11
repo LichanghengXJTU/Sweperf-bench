@@ -1,0 +1,56 @@
+id: pandas-dev__pandas-38148
+status:
+  human: APPROVED
+  llm: COMING_SOON
+comparison:
+  llm_better: COMING_SOON
+repo:
+  org: pandas-dev
+  name: pandas
+  url: https://github.com/pandas-dev/pandas
+  pull_request: https://github.com/pandas-dev/pandas/pull/38148
+  base_commit: 59710bcd85ab8982da1bb26af0db7575a2c3565f
+  created_at: '2020-11-29 14:07:15'
+  version: '1.1'
+workload:
+  language: python
+  code: "\nimport timeit\nimport statistics\n\nimport pandas as pd\nimport numpy as\
+    \ np\nfrom string import ascii_lowercase\n\ndef setitem(x, x_cols, df):\n    new\
+    \ = pd.DataFrame(index=df.index)\n    new[x_cols] = x\n    new[df.columns] = df\n\
+    \    return new\n\ndef concat(x, x_cols, df):\n    return pd.concat(\n       \
+    \ [\n            pd.DataFrame(x, columns=x_cols, index=df.index),\n          \
+    \  df,\n        ],\n        axis=1,\n    )\n\nx = np.ones((1000, 10))\nx_col =\
+    \ list(ascii_lowercase[:10])\ndf = pd.DataFrame(\n    {\n        \"str\": np.random.choice(np.array(list(ascii_lowercase)),\
+    \ size=1000),\n        \"int\": np.arange(1000, dtype=int),\n    }\n)\ndef workload():\n\
+    \    setitem(x, x_col, df)\n    concat(x, x_col, df)\n\nruntimes = timeit.repeat(workload,\
+    \ number=1, repeat=10**4)\n\nprint(\"Mean:\", statistics.mean(runtimes))\nprint(\"\
+    Std Dev:\", statistics.stdev(runtimes))"
+docker:
+  base_image: docker.io/sweperf/sweperf:pandas-dev__pandas-38148
+  human_image: docker.io/sweperf/sweperf_annotate:pandas-dev__pandas-38148
+  llm_image: PLACEHOLDER
+  commands:
+    run_base: docker run --rm --name bench_{id}_base --mount type=bind,src=<WORKLOAD_PY>,dst=/tmp/workload.py
+      {base_image} /bin/bash -lc 'python /tmp/workload.py' 2>&1
+    run_human: docker run --rm --name bench_{id}_human --mount type=bind,src=<WORKLOAD_PY>,dst=/tmp/workload.py
+      {human_image} /bin/bash -lc 'chmod +x /perf.sh && /perf.sh && python /tmp/workload.py'
+      2>&1
+    run_llm: echo 'LLM image not available yet for {id}. Please fill docker.llm_image.'
+metrics:
+  reducer: mean_std
+  parse_regex:
+    mean: (?i)\bMean:\s*([0-9.]+)
+    std: (?i)(Std Dev|SD):\s*([0-9.]+)
+notes:
+  user_notes: 'Before Mean: 0.0037200146708753893
+
+    Before SD: 5.338637340651613e-05
+
+    After Mean: 0.0010889010753133335
+
+    After SD: 3.809981511472526e-05
+
+    Improvement: -70.73%'
+  mike_notes: ''
+meta:
+  num_covering_tests: '156'

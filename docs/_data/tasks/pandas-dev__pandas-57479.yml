@@ -1,0 +1,65 @@
+id: pandas-dev__pandas-57479
+status:
+  human: APPROVED
+  llm: COMING_SOON
+comparison:
+  llm_better: COMING_SOON
+repo:
+  org: pandas-dev
+  name: pandas
+  url: https://github.com/pandas-dev/pandas
+  pull_request: https://github.com/pandas-dev/pandas/pull/57479
+  base_commit: 1f622e2b5303650fa5e497e4552d0554e51049cb
+  created_at: '2024-02-18 0:21:26'
+  version: '2.2'
+workload:
+  language: python
+  code: "import pandas as pd\nimport numpy as np\nimport timeit\nimport statistics\n\
+    \ndef setup():\n    global df, values\n    N = 10**5\n    dt_ns = pd.date_range(\"\
+    2022-01-01\", periods=N, freq=\"min\").to_numpy().copy()\n    dt_ms = dt_ns.astype(\"\
+    datetime64[ms]\").copy()\n    dt_ns[::2] = np.datetime64('NaT')  # now works!\n\
+    \    dt_ms[1::2] = np.datetime64('NaT')\n    df = pd.DataFrame({\n        \"ns_col\"\
+    : dt_ns,\n        \"ms_col\": dt_ms,\n        \"other\": np.random.randn(N)\n\
+    \    })\n    values = {\n        \"ns_col\": pd.Timestamp(\"2022-01-02\"),\n \
+    \       \"ms_col\": pd.Timestamp(\"2022-01-03\").to_datetime64()\n    }\n\ndef\
+    \ workload():\n    global df, values\n    d = df.copy()\n    d.fillna(value=values,\
+    \ inplace=True)\n\nruntimes = timeit.repeat(workload, number=100, repeat=100,\
+    \ setup=setup)\nprint(\"Mean:\", statistics.mean(runtimes))\nprint(\"Std Dev:\"\
+    , statistics.stdev(runtimes))"
+docker:
+  base_image: docker.io/sweperf/sweperf:pandas-dev__pandas-57479
+  human_image: docker.io/sweperf/sweperf_annotate:pandas-dev__pandas-57479
+  llm_image: PLACEHOLDER
+  commands:
+    run_base: docker run --rm --name bench_{id}_base --mount type=bind,src=<WORKLOAD_PY>,dst=/tmp/workload.py
+      {base_image} /bin/bash -lc 'python /tmp/workload.py' 2>&1
+    run_human: docker run --rm --name bench_{id}_human --mount type=bind,src=<WORKLOAD_PY>,dst=/tmp/workload.py
+      {human_image} /bin/bash -lc 'chmod +x /perf.sh && /perf.sh && python /tmp/workload.py'
+      2>&1
+    run_llm: echo 'LLM image not available yet for {id}. Please fill docker.llm_image.'
+metrics:
+  reducer: mean_std
+  parse_regex:
+    mean: (?i)\bMean:\s*([0-9.]+)
+    std: (?i)(Std Dev|SD):\s*([0-9.]+)
+notes:
+  user_notes: 'Mean: 0.125603107609993
+
+    Std Dev: 0.00472524567272216
+
+    Mean: 0.08469125963999431
+
+    Std Dev: 0.002833652464994697
+
+    Improvement:-32.57%'
+  mike_notes: 'Mean: 0.125603107609993
+
+    Std Dev: 0.00472524567272216
+
+    Mean: 0.08469125963999431
+
+    Std Dev: 0.002833652464994697
+
+    Improvement:-32.57%'
+meta:
+  num_covering_tests: '948'

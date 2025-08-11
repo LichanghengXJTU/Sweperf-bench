@@ -1,0 +1,64 @@
+id: pandas-dev__pandas-54299
+status:
+  human: APPROVED
+  llm: COMING_SOON
+comparison:
+  llm_better: COMING_SOON
+repo:
+  org: pandas-dev
+  name: pandas
+  url: https://github.com/pandas-dev/pandas
+  pull_request: https://github.com/pandas-dev/pandas/pull/54299
+  base_commit: d75e26b922ba1bc4f272f9ebf4e1d46572b1e183
+  created_at: '2023-07-29 0:35:57'
+  version: '2'
+workload:
+  language: python
+  code: "import timeit\nimport statistics\n\nimport numpy as np\nimport pandas as\
+    \ pd\n\n\ndtype_combos = [\n    ((\"float64\", \"float64[pyarrow]\"), False),\n\
+    \    ((\"float64\", \"Float64\"), False),\n    ((\"int64[pyarrow]\", \"float64[pyarrow]\"\
+    ), False),\n    ((\"int64[pyarrow]\", \"float64[pyarrow]\"), True),\n    ((\"\
+    float64\", \"Float64\"), True),\n    ((\"Int64\", \"Float64\"), False),\n    ((\"\
+    Int64\", \"Float64\"), True),\n    ((\"float64\", \"float64[pyarrow]\"), True),\n\
+    \    ((\"Float64\", \"Float64\"), True),\n    ((\"float64[pyarrow]\", \"float64[pyarrow]\"\
+    ), True),\n    ((\"Float64\", \"Float64\"), False),\n    ((\"float64[pyarrow]\"\
+    , \"float64[pyarrow]\"), False),\n]\n\nastype_registry = []\n\nfor (from_dtype,\
+    \ to_dtype), copy in dtype_combos:\n    if from_dtype.startswith(\"float\") or\
+    \ from_dtype in (\"Float64\",):\n        data = np.random.randn(100, 100)\n  \
+    \  elif from_dtype.startswith(\"int\") or from_dtype in (\"Int64\",):\n      \
+    \  data = np.random.randint(0, 1000, size=(100, 100))\n    else:\n        continue\n\
+    \n    df = pd.DataFrame(data, dtype=from_dtype)\n    astype_registry.append((df,\
+    \ to_dtype, copy))\n\ndef workload():\n    for df, to_dtype, copy in astype_registry:\n\
+    \        df.astype(to_dtype, copy=copy)\n\nruntimes = timeit.repeat(workload,\
+    \ number=5, repeat=100)\n\n# Print runtime mean and std deviation.\nprint(\"Mean:\"\
+    , statistics.mean(runtimes))\nprint(\"Std Dev:\", statistics.stdev(runtimes))\n\
+    \n"
+docker:
+  base_image: docker.io/sweperf/sweperf:pandas-dev__pandas-54299
+  human_image: docker.io/sweperf/sweperf_annotate:pandas-dev__pandas-54299
+  llm_image: PLACEHOLDER
+  commands:
+    run_base: docker run --rm --name bench_{id}_base --mount type=bind,src=<WORKLOAD_PY>,dst=/tmp/workload.py
+      {base_image} /bin/bash -lc 'python /tmp/workload.py' 2>&1
+    run_human: docker run --rm --name bench_{id}_human --mount type=bind,src=<WORKLOAD_PY>,dst=/tmp/workload.py
+      {human_image} /bin/bash -lc 'chmod +x /perf.sh && /perf.sh && python /tmp/workload.py'
+      2>&1
+    run_llm: echo 'LLM image not available yet for {id}. Please fill docker.llm_image.'
+metrics:
+  reducer: mean_std
+  parse_regex:
+    mean: (?i)\bMean:\s*([0-9.]+)
+    std: (?i)(Std Dev|SD):\s*([0-9.]+)
+notes:
+  user_notes: 'Before Mean: 0.5568005729810102
+
+    Before SD: 0.0029325651862389893
+
+    After Mean: 0.19812631999899166
+
+    After SD: 0.0025435674846405825
+
+    Improvement: -64.42%'
+  mike_notes: ''
+meta:
+  num_covering_tests: '922'

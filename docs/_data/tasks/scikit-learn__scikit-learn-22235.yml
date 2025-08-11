@@ -1,0 +1,53 @@
+id: scikit-learn__scikit-learn-22235
+status:
+  human: APPROVED
+  llm: COMING_SOON
+comparison:
+  llm_better: COMING_SOON
+repo:
+  org: scikit-learn
+  name: scikit-learn
+  url: https://github.com/scikit-learn/scikit-learn
+  pull_request: https://github.com/scikit-learn/scikit-learn/pull/22235
+  base_commit: 0c65bbfe8ce816a181780d2a249c94dd653e115a
+  created_at: '2022-01-17 18:03:28'
+  version: '1.1'
+workload:
+  language: python
+  code: "import timeit\nimport statistics\n\nimport pandas as pd\nimport numpy as\
+    \ np\nimport sklearn\nfrom sklearn.feature_selection import SelectKBest\nfrom\
+    \ sklearn.feature_selection import chi2\n\nn = 100_000\nfeatures = 100\nnum_classes\
+    \ = 100\n\nX_array = np.random.randint(0, 2, size=(n, features), dtype=bool)\n\
+    y = np.random.randint(0, num_classes, size=(n,), dtype=int)\n\ndef workload():\n\
+    \    chi2(X_array, y)\n    \n# Run benchmark\nruntimes = timeit.repeat(workload,\
+    \ number=1, repeat=25)\n\n# Output results\nprint(\"Mean:\", statistics.mean(runtimes))\n\
+    print(\"Std Dev:\", statistics.stdev(runtimes))\n"
+docker:
+  base_image: docker.io/sweperf/sweperf:scikit-learn__scikit-learn-22235
+  human_image: docker.io/sweperf/sweperf_annotate:scikit-learn__scikit-learn-22235
+  llm_image: PLACEHOLDER
+  commands:
+    run_base: docker run --rm --name bench_{id}_base --mount type=bind,src=<WORKLOAD_PY>,dst=/tmp/workload.py
+      {base_image} /bin/bash -lc 'python /tmp/workload.py' 2>&1
+    run_human: docker run --rm --name bench_{id}_human --mount type=bind,src=<WORKLOAD_PY>,dst=/tmp/workload.py
+      {human_image} /bin/bash -lc 'chmod +x /perf.sh && /perf.sh && python /tmp/workload.py'
+      2>&1
+    run_llm: echo 'LLM image not available yet for {id}. Please fill docker.llm_image.'
+metrics:
+  reducer: mean_std
+  parse_regex:
+    mean: (?i)\bMean:\s*([0-9.]+)
+    std: (?i)(Std Dev|SD):\s*([0-9.]+)
+notes:
+  user_notes: 'Before Mean: 6.893791971518658
+
+    Before SD: 0.03736675243867229
+
+    After Mean: 0.17217932476196438
+
+    After SD: 0.01134497193027927
+
+    Improvement: -97.50%'
+  mike_notes: ''
+meta:
+  num_covering_tests: '2'

@@ -1,0 +1,70 @@
+id: dask__dask-10428
+status:
+  human: APPROVED
+  llm: COMING_SOON
+comparison:
+  llm_better: COMING_SOON
+repo:
+  org: dask
+  name: dask
+  url: https://github.com/dask/dask
+  pull_request: https://github.com/dask/dask/pull/10428
+  base_commit: a8f2acc2e3328707cda2a25cee6cfadec44ec815
+  created_at: '2023-07-25 17:13:16'
+  version: '2023.7'
+workload:
+  language: python
+  code: "import timeit\nimport statistics\n\nimport dask.dataframe as dd\nfrom dask.utils\
+    \ import parse_bytes\nfrom dask.sizeof import sizeof\nfrom dask.datasets import\
+    \ timeseries\nimport pandas as pd\n\ndef timeseries_of_size(\n    target_nbytes,\n\
+    \    *,\n    start=\"2000-01-01\",\n    freq=\"1s\",\n    partition_freq=\"1d\"\
+    ,\n    dtypes={\"name\": str, \"id\": int, \"x\": float, \"y\": float},\n    seed=None,\n\
+    \    **kwargs,\n):\n    if isinstance(target_nbytes, str):\n        target_nbytes\
+    \ = parse_bytes(target_nbytes)\n\n    start_dt = pd.to_datetime(start)\n    partition_freq_dt\
+    \ = pd.to_timedelta(partition_freq)\n\n    example_part = timeseries(\n      \
+    \  start=start,\n        end=start_dt + partition_freq_dt,\n        freq=freq,\n\
+    \        partition_freq=partition_freq,\n        dtypes=dtypes,\n        seed=seed,\n\
+    \        **kwargs,\n    )\n    p = example_part.compute(scheduler=\"threads\"\
+    )\n    partition_size = sizeof(p)\n    npartitions = round(target_nbytes / partition_size)\n\
+    \n    ts = timeseries(\n        start=start,\n        end=start_dt + partition_freq_dt\
+    \ * npartitions,\n        freq=freq,\n        partition_freq=partition_freq,\n\
+    \        dtypes=dtypes,\n        seed=seed,\n        **kwargs,\n    )\n    return\
+    \ ts\n\n\ndef setup():\n    global df, df2\n    df  = timeseries_of_size(\"1GB\"\
+    , start=\"2020-01-01\",\n                             freq=\"600ms\", partition_freq=\"\
+    12h\",\n                             dtypes={str(i): float for i in range(100)})\n\
+    \n    df2 = timeseries_of_size(\"512MB\", start=\"2010-01-01\",\n            \
+    \                 freq=\"600ms\", partition_freq=\"12h\",\n                  \
+    \           dtypes={str(i): float for i in range(100)})\n\n\ndef workload():\n\
+    \    # Force alignment, then reduction, then materialise the result\n    (df2\
+    \ - df).mean().compute()\n\nruntimes = timeit.repeat(workload, number=1, repeat=10,\
+    \ setup=setup)\n\n# Print runtime mean and std deviation.\nprint(\"Mean:\", statistics.mean(runtimes))\n\
+    print(\"Std Dev:\", statistics.stdev(runtimes))"
+docker:
+  base_image: docker.io/sweperf/sweperf:dask__dask-10428
+  human_image: docker.io/sweperf/sweperf_annotate:dask__dask-10428
+  llm_image: PLACEHOLDER
+  commands:
+    run_base: docker run --rm --name bench_{id}_base --mount type=bind,src=<WORKLOAD_PY>,dst=/tmp/workload.py
+      {base_image} /bin/bash -lc 'python /tmp/workload.py' 2>&1
+    run_human: docker run --rm --name bench_{id}_human --mount type=bind,src=<WORKLOAD_PY>,dst=/tmp/workload.py
+      {human_image} /bin/bash -lc 'chmod +x /perf.sh && /perf.sh && python /tmp/workload.py'
+      2>&1
+    run_llm: echo 'LLM image not available yet for {id}. Please fill docker.llm_image.'
+metrics:
+  reducer: mean_std
+  parse_regex:
+    mean: (?i)\bMean:\s*([0-9.]+)
+    std: (?i)(Std Dev|SD):\s*([0-9.]+)
+notes:
+  user_notes: 'Before Mean: 4.611844550509704
+
+    Before SD: 0.43231068551717095
+
+    After Mean: 1.4180699832097161
+
+    After SD: 0.013197235987137792
+
+    Improvement: -69.25%'
+  mike_notes: ''
+meta:
+  num_covering_tests: '8'

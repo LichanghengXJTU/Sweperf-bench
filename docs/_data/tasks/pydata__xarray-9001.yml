@@ -1,0 +1,58 @@
+id: pydata__xarray-9001
+status:
+  human: APPROVED
+  llm: COMING_SOON
+comparison:
+  llm_better: COMING_SOON
+repo:
+  org: pydata
+  name: xarray
+  url: https://github.com/pydata/xarray
+  pull_request: https://github.com/pydata/xarray/pull/9001
+  base_commit: 8d728bf253f63c557ab8993d47c1cd0c3113277d
+  created_at: '2024-05-05 14:51:22'
+  version: '2023.07'
+workload:
+  language: python
+  code: "\n\nimport timeit\nimport statistics\n\nimport xarray\nimport subprocess\n\
+    \nimport zipfile\nimport os\nimport glob\n\n# Download the dataset from: \ndataset_url\
+    \ = \"https://github.com/pydata/xarray/files/15213429/software_timestamp.zip\"\
+    \n\n# Download to /tmp/software_timestamp.zip\nsubprocess.run(['wget', dataset_url,\
+    \ '-O', '/tmp/software_timestamp.zip'])\n\n# Unzip the dataset\nwith zipfile.ZipFile('/tmp/software_timestamp.zip',\
+    \ 'r') as zip_ref:\n    zip_ref.extractall('/tmp')\n\ndef setup():\n    global\
+    \ software_timestamp, N_frames\n\n    dataset = xarray.open_dataset('/tmp/software_timestamp.nc',\
+    \ engine='h5netcdf')\n    software_timestamp = dataset['software_timestamp'].compute()\n\
+    \    N_frames = dataset.sizes['frame_number']\n    dataset.close()\n\ndef workload():\n\
+    \    global software_timestamp, N_frames\n    for i in range(1000):\n        software_timestamp.isel(frame_number=i\
+    \ % N_frames)\n\nruntimes = timeit.repeat(workload, number=1, repeat=10, setup=setup)\n\
+    \nfor filepath in glob.glob('/tmp/software_timestamp*'):\n    os.remove(filepath)\n\
+    \nprint(\"Mean:\", statistics.mean(runtimes))\nprint(\"Std Dev:\", statistics.stdev(runtimes))"
+docker:
+  base_image: docker.io/sweperf/sweperf:pydata__xarray-9001
+  human_image: docker.io/sweperf/sweperf_annotate:pydata__xarray-9001
+  llm_image: PLACEHOLDER
+  commands:
+    run_base: docker run --rm --name bench_{id}_base --mount type=bind,src=<WORKLOAD_PY>,dst=/tmp/workload.py
+      {base_image} /bin/bash -lc 'python /tmp/workload.py' 2>&1
+    run_human: docker run --rm --name bench_{id}_human --mount type=bind,src=<WORKLOAD_PY>,dst=/tmp/workload.py
+      {human_image} /bin/bash -lc 'chmod +x /perf.sh && /perf.sh && python /tmp/workload.py'
+      2>&1
+    run_llm: echo 'LLM image not available yet for {id}. Please fill docker.llm_image.'
+metrics:
+  reducer: mean_std
+  parse_regex:
+    mean: (?i)\bMean:\s*([0-9.]+)
+    std: (?i)(Std Dev|SD):\s*([0-9.]+)
+notes:
+  user_notes: 'Before Mean: 0.12650922629982234
+
+    Before SD: 0.001195230668165238
+
+    After Mean: 0.04844941809424199
+
+    After SD: 0.0005896483023727825
+
+    Improvement: -61.70%'
+  mike_notes: ''
+meta:
+  num_covering_tests: '49'

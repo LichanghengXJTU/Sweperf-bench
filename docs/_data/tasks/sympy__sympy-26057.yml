@@ -1,0 +1,50 @@
+id: sympy__sympy-26057
+status:
+  human: APPROVED
+  llm: COMING_SOON
+comparison:
+  llm_better: COMING_SOON
+repo:
+  org: sympy
+  name: sympy
+  url: https://github.com/sympy/sympy
+  pull_request: https://github.com/sympy/sympy/pull/26057
+  base_commit: 02eeb233a4078fb5f97a76bafbb36433691b372b
+  created_at: '2024-01-10 14:14:10'
+  version: '1.13'
+workload:
+  language: python
+  code: "import timeit\nimport statistics\nfrom sympy import randMatrix\nfrom sympy.core.cache\
+    \ import clear_cache\n\ndef setup():\n    global M\n    clear_cache()\n    M =\
+    \ randMatrix(1000, percent=0.1)\n\ndef workload():\n    global M\n    _ = M.charpoly()\n\
+    \nruntimes = timeit.repeat(workload, number=1, repeat=10, setup=setup)\n\nprint(\"\
+    Mean:\", statistics.mean(runtimes))\nprint(\"Std Dev:\", statistics.stdev(runtimes))"
+docker:
+  base_image: docker.io/sweperf/sweperf:sympy__sympy-26057
+  human_image: docker.io/sweperf/sweperf_annotate:sympy__sympy-26057
+  llm_image: PLACEHOLDER
+  commands:
+    run_base: docker run --rm --name bench_{id}_base --mount type=bind,src=<WORKLOAD_PY>,dst=/tmp/workload.py
+      {base_image} /bin/bash -lc 'python /tmp/workload.py' 2>&1
+    run_human: docker run --rm --name bench_{id}_human --mount type=bind,src=<WORKLOAD_PY>,dst=/tmp/workload.py
+      {human_image} /bin/bash -lc 'chmod +x /perf.sh && /perf.sh && python /tmp/workload.py'
+      2>&1
+    run_llm: echo 'LLM image not available yet for {id}. Please fill docker.llm_image.'
+metrics:
+  reducer: mean_std
+  parse_regex:
+    mean: (?i)\bMean:\s*([0-9.]+)
+    std: (?i)(Std Dev|SD):\s*([0-9.]+)
+notes:
+  user_notes: 'Before Mean: 8.597240168292775
+
+    Before SD: 0.24861063665546376
+
+    After Mean: 0.29760190031374806
+
+    After SD: 0.006885159787575276
+
+    Improvement: -96.54%'
+  mike_notes: ''
+meta:
+  num_covering_tests: '8'

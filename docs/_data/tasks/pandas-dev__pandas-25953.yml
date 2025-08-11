@@ -1,0 +1,54 @@
+id: pandas-dev__pandas-25953
+status:
+  human: APPROVED
+  llm: COMING_SOON
+comparison:
+  llm_better: COMING_SOON
+repo:
+  org: pandas-dev
+  name: pandas
+  url: https://github.com/pandas-dev/pandas
+  pull_request: https://github.com/pandas-dev/pandas/pull/25953
+  base_commit: 48ea04fe5d3ba9b618152ae83aef703dbbb2c3f4
+  created_at: '2019-04-02 1:22:45'
+  version: '0.24'
+workload:
+  language: python
+  code: "\nimport timeit\nimport statistics\n\nimport pandas as pd\nimport numpy as\
+    \ np\n\nops = ['mean', 'sum', 'median', 'std', 'skew', 'kurt', 'mad', 'prod',\
+    \ 'sem',\n       'var']\nlevel = 1\n\nlevels = [np.arange(10), np.arange(100),\
+    \ np.arange(100)]\ncodes = [np.arange(10).repeat(10000),\n            np.tile(np.arange(100).repeat(100),\
+    \ 10),\n            np.tile(np.tile(np.arange(100), 100), 10)]\nindex = pd.MultiIndex(levels=levels,\
+    \ codes=codes)\ns = pd.Series(np.random.randn(len(index)), index=index)\n\nop_funcs\
+    \ = [getattr(s, op) for op in ops]\n\ndef workload():\n    for op in op_funcs:\n\
+    \        op(level=level)\n\nruntimes = timeit.repeat(workload, number=1, repeat=1000)\n\
+    \nprint(\"Mean:\", statistics.mean(runtimes))\nprint(\"Std Dev:\", statistics.stdev(runtimes))"
+docker:
+  base_image: docker.io/sweperf/sweperf:pandas-dev__pandas-25953
+  human_image: docker.io/sweperf/sweperf_annotate:pandas-dev__pandas-25953
+  llm_image: PLACEHOLDER
+  commands:
+    run_base: docker run --rm --name bench_{id}_base --mount type=bind,src=<WORKLOAD_PY>,dst=/tmp/workload.py
+      {base_image} /bin/bash -lc 'python /tmp/workload.py' 2>&1
+    run_human: docker run --rm --name bench_{id}_human --mount type=bind,src=<WORKLOAD_PY>,dst=/tmp/workload.py
+      {human_image} /bin/bash -lc 'chmod +x /perf.sh && /perf.sh && python /tmp/workload.py'
+      2>&1
+    run_llm: echo 'LLM image not available yet for {id}. Please fill docker.llm_image.'
+metrics:
+  reducer: mean_std
+  parse_regex:
+    mean: (?i)\bMean:\s*([0-9.]+)
+    std: (?i)(Std Dev|SD):\s*([0-9.]+)
+notes:
+  user_notes: 'Before Mean: 0.10963932325801579
+
+    Before SD: 0.0008181389341457053
+
+    After Mean: 0.09130161583801964
+
+    After SD: 0.0009562042405102156
+
+    Improvement: -16.73%'
+  mike_notes: ''
+meta:
+  num_covering_tests: '73'

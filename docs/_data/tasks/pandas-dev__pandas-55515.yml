@@ -1,0 +1,62 @@
+id: pandas-dev__pandas-55515
+status:
+  human: APPROVED
+  llm: COMING_SOON
+comparison:
+  llm_better: COMING_SOON
+repo:
+  org: pandas-dev
+  name: pandas
+  url: https://github.com/pandas-dev/pandas
+  pull_request: https://github.com/pandas-dev/pandas/pull/55515
+  base_commit: 0021d241c6aa1b8db91151361b48d7864201fd01
+  created_at: '2023-10-14 5:06:49'
+  version: '2.1'
+workload:
+  language: python
+  code: "\nimport timeit\nimport statistics\n\nimport pandas as pd\nimport numpy as\
+    \ np\nimport tempfile\nimport os\n\ntry:\n    import pandas._testing as tm\nexcept\
+    \ ImportError:\n    import pandas.util.testing as tm\n\n\nN = 10_000\nC = 5000\n\
+    \ntemp_path = tempfile.NamedTemporaryFile(suffix=\".dta\", delete=False).name\n\
+    \n\ndf = pd.DataFrame(\n    np.random.randn(N, C),\n    columns=[f\"float{i}\"\
+    \ for i in range(C)],\n    index=pd.date_range(\"20000101\", periods=N, freq=\"\
+    H\"),\n)\ndf[\"object\"] = tm.makeStringIndex(N)\ndf[\"int8_\"] = np.random.randint(np.iinfo(np.int8).min,\
+    \ np.iinfo(np.int8).max - 27, N)\ndf[\"int16_\"] = np.random.randint(np.iinfo(np.int16).min,\
+    \ np.iinfo(np.int16).max - 27, N)\ndf[\"int32_\"] = np.random.randint(np.iinfo(np.int32).min,\
+    \ np.iinfo(np.int32).max - 27, N)\ndf[\"float32_\"] = np.array(np.random.randn(N),\
+    \ dtype=np.float32)\n\nfor i in range(10):\n    missing_data = np.random.randn(N)\n\
+    \    missing_data[missing_data < 0] = np.nan\n    df[f\"missing_{i}\"] = missing_data\n\
+    \nconvert_dates_arg = {\"index\": \"tc\"}\ndf.to_stata(temp_path, convert_dates=convert_dates_arg)\n\
+    \n\ndef workload():\n    pd.read_stata(temp_path)\n\n\nruntimes = timeit.repeat(workload,\
+    \ number=1, repeat=5)\n\nos.remove(temp_path)\n\n# Print runtime mean and std\
+    \ deviation.\nprint(\"Mean:\", statistics.mean(runtimes))\nprint(\"Std Dev:\"\
+    , statistics.stdev(runtimes))\n"
+docker:
+  base_image: docker.io/sweperf/sweperf:pandas-dev__pandas-55515
+  human_image: docker.io/sweperf/sweperf_annotate:pandas-dev__pandas-55515
+  llm_image: PLACEHOLDER
+  commands:
+    run_base: docker run --rm --name bench_{id}_base --mount type=bind,src=<WORKLOAD_PY>,dst=/tmp/workload.py
+      {base_image} /bin/bash -lc 'python /tmp/workload.py' 2>&1
+    run_human: docker run --rm --name bench_{id}_human --mount type=bind,src=<WORKLOAD_PY>,dst=/tmp/workload.py
+      {human_image} /bin/bash -lc 'chmod +x /perf.sh && /perf.sh && python /tmp/workload.py'
+      2>&1
+    run_llm: echo 'LLM image not available yet for {id}. Please fill docker.llm_image.'
+metrics:
+  reducer: mean_std
+  parse_regex:
+    mean: (?i)\bMean:\s*([0-9.]+)
+    std: (?i)(Std Dev|SD):\s*([0-9.]+)
+notes:
+  user_notes: 'Before Mean: 2.2017833039863035
+
+    Before SD: 0.009410074889813522
+
+    After Mean: 0.8795856187934987
+
+    After SD: 0.010874655170799375
+
+    Improvement: -60.05%'
+  mike_notes: ''
+meta:
+  num_covering_tests: '925'

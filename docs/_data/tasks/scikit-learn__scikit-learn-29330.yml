@@ -1,0 +1,59 @@
+id: scikit-learn__scikit-learn-29330
+status:
+  human: APPROVED
+  llm: COMING_SOON
+comparison:
+  llm_better: COMING_SOON
+repo:
+  org: scikit-learn
+  name: scikit-learn
+  url: https://github.com/scikit-learn/scikit-learn
+  pull_request: https://github.com/scikit-learn/scikit-learn/pull/29330
+  base_commit: a490ab19667988de62024eb98acd61117f8c292a
+  created_at: '2024-06-21 10:28:32'
+  version: '1.6'
+workload:
+  language: python
+  code: "import timeit\nimport statistics\n\nimport joblib\n\nfrom sklearn.compose\
+    \ import ColumnTransformer\nfrom sklearn.pipeline import FunctionTransformer,\
+    \ Pipeline\n\nimport pandas as pd\nimport random\n\nn_col = 40\n\ndef list_sum(df_col):\n\
+    \    series = df_col.squeeze(axis=1)\n    return series.apply(sum).to_numpy().reshape(-1,\
+    \ 1)\n\ndf = pd.DataFrame({\n    f\"{i}\": [[random.random() for _ in range(random.randint(1,\
+    \ 5))]\n             for _ in range(100_000)]\n    for i in range(n_col)\n})\n\
+    \ndef setup():\n    global pipeline\n    pipeline = Pipeline([\n        (\"transformer\"\
+    ,\n         ColumnTransformer(\n             [(f\"{i}\",\n               FunctionTransformer(list_sum,\
+    \ validate=False),\n               [f\"{i}\"])\n              for i in range(n_col)],\n\
+    \             n_jobs=2))\n    ])\n    \ndef workload():\n    global pipeline\n\
+    \    with joblib.parallel_backend(backend=\"loky\", mmap_mode=\"r+\"):\n     \
+    \   pipeline.fit_transform(df)\n\nruntimes = timeit.repeat(workload, number=1,\
+    \ repeat=4, setup=setup)[-3:]\n\nprint(\"Mean:\", statistics.mean(runtimes))\n\
+    print(\"Std Dev:\", statistics.stdev(runtimes))"
+docker:
+  base_image: docker.io/sweperf/sweperf:scikit-learn__scikit-learn-29330
+  human_image: docker.io/sweperf/sweperf_annotate:scikit-learn__scikit-learn-29330
+  llm_image: PLACEHOLDER
+  commands:
+    run_base: docker run --rm --name bench_{id}_base --mount type=bind,src=<WORKLOAD_PY>,dst=/tmp/workload.py
+      {base_image} /bin/bash -lc 'python /tmp/workload.py' 2>&1
+    run_human: docker run --rm --name bench_{id}_human --mount type=bind,src=<WORKLOAD_PY>,dst=/tmp/workload.py
+      {human_image} /bin/bash -lc 'chmod +x /perf.sh && /perf.sh && python /tmp/workload.py'
+      2>&1
+    run_llm: echo 'LLM image not available yet for {id}. Please fill docker.llm_image.'
+metrics:
+  reducer: mean_std
+  parse_regex:
+    mean: (?i)\bMean:\s*([0-9.]+)
+    std: (?i)(Std Dev|SD):\s*([0-9.]+)
+notes:
+  user_notes: 'Before Mean: 85.64932707162806
+
+    Before SD: 1.239777115289879
+
+    After Mean: 2.0111690898076633
+
+    After SD: 0.1492270640164523
+
+    Improvement: -97.65%'
+  mike_notes: ''
+meta:
+  num_covering_tests: '8'

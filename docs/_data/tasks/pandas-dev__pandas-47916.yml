@@ -1,0 +1,55 @@
+id: pandas-dev__pandas-47916
+status:
+  human: APPROVED
+  llm: COMING_SOON
+comparison:
+  llm_better: COMING_SOON
+repo:
+  org: pandas-dev
+  name: pandas
+  url: https://github.com/pandas-dev/pandas
+  pull_request: https://github.com/pandas-dev/pandas/pull/47916
+  base_commit: d36138b116a9fa214506160711d8bebb335a3c33
+  created_at: '2022-08-01 19:05:55'
+  version: '1.4'
+workload:
+  language: python
+  code: "import pandas as pd\nimport numpy as np\nimport pickle\nimport timeit\nimport\
+    \ statistics\n\ndef setup():\n    global pickled_data\n\n    n = 1_000_000\n \
+    \   level_0 = np.repeat(np.arange(1000), 1000)\n    level_1 = np.tile(np.arange(1000),\
+    \ 1000)\n\n    mi = pd.MultiIndex.from_arrays([level_0, level_1])\n    pickled_data\
+    \ = pickle.dumps(mi)\n\ndef workload():\n    global pickled_data\n    _ = pickle.loads(pickled_data)\n\
+    \nruntimes = timeit.repeat(workload, number=10, repeat=100, setup = setup)\nprint(\"\
+    Mean:\", statistics.mean(runtimes))\nprint(\"Std Dev:\", statistics.stdev(runtimes))"
+docker:
+  base_image: docker.io/sweperf/sweperf:pandas-dev__pandas-47916
+  human_image: docker.io/sweperf/sweperf_annotate:pandas-dev__pandas-47916
+  llm_image: PLACEHOLDER
+  commands:
+    run_base: docker run --rm --name bench_{id}_base --mount type=bind,src=<WORKLOAD_PY>,dst=/tmp/workload.py
+      {base_image} /bin/bash -lc 'python /tmp/workload.py' 2>&1
+    run_human: docker run --rm --name bench_{id}_human --mount type=bind,src=<WORKLOAD_PY>,dst=/tmp/workload.py
+      {human_image} /bin/bash -lc 'chmod +x /perf.sh && /perf.sh && python /tmp/workload.py'
+      2>&1
+    run_llm: echo 'LLM image not available yet for {id}. Please fill docker.llm_image.'
+metrics:
+  reducer: mean_std
+  parse_regex:
+    mean: (?i)\bMean:\s*([0-9.]+)
+    std: (?i)(Std Dev|SD):\s*([0-9.]+)
+notes:
+  user_notes: 'An error occurred:
+
+
+    An unknown error occurred. Please check the local files.'
+  mike_notes: 'Mean: 0.0032989404414547605
+
+    Std Dev: 0.00044924897179374
+
+    Mean: 0.0014843200467294082
+
+    Std Dev: 0.00016532076144763994
+
+    Improvement:-55.01%'
+meta:
+  num_covering_tests: '18'

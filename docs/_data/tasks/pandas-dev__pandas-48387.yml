@@ -1,0 +1,53 @@
+id: pandas-dev__pandas-48387
+status:
+  human: APPROVED
+  llm: COMING_SOON
+comparison:
+  llm_better: COMING_SOON
+repo:
+  org: pandas-dev
+  name: pandas
+  url: https://github.com/pandas-dev/pandas
+  pull_request: https://github.com/pandas-dev/pandas/pull/48387
+  base_commit: fa211d47604f5de7667440a842f7fbbb463de31d
+  created_at: '2022-09-04 16:23:27'
+  version: '1.4'
+workload:
+  language: python
+  code: "import timeit\nimport statistics\n\nimport pandas as pd\nimport numpy as\
+    \ np\n\nN = 1_000_000\ndf = pd.DataFrame(\n    np.random.randint(0, high=100,\
+    \ size=(N, 10)),\n    columns=list(\"abcdefghij\"),\n    dtype=\"Float64\",\n\
+    )\ndf.loc[list(range(1, N, 5)), list(\"abcdefghij\")] = pd.NA\ndf[\"key\"] = np.random.randint(0,\
+    \ 100, size=N)\n\ndef workload():\n    df.groupby(\"key\").agg(\"median\")\n\n\
+    runtimes = timeit.repeat(workload, number=1, repeat=50)\n\n# Print runtime mean\
+    \ and std deviation.\nprint(\"Mean:\", statistics.mean(runtimes))\nprint(\"Std\
+    \ Dev:\", statistics.stdev(runtimes))\n"
+docker:
+  base_image: docker.io/sweperf/sweperf:pandas-dev__pandas-48387
+  human_image: docker.io/sweperf/sweperf_annotate:pandas-dev__pandas-48387
+  llm_image: PLACEHOLDER
+  commands:
+    run_base: docker run --rm --name bench_{id}_base --mount type=bind,src=<WORKLOAD_PY>,dst=/tmp/workload.py
+      {base_image} /bin/bash -lc 'python /tmp/workload.py' 2>&1
+    run_human: docker run --rm --name bench_{id}_human --mount type=bind,src=<WORKLOAD_PY>,dst=/tmp/workload.py
+      {human_image} /bin/bash -lc 'chmod +x /perf.sh && /perf.sh && python /tmp/workload.py'
+      2>&1
+    run_llm: echo 'LLM image not available yet for {id}. Please fill docker.llm_image.'
+metrics:
+  reducer: mean_std
+  parse_regex:
+    mean: (?i)\bMean:\s*([0-9.]+)
+    std: (?i)(Std Dev|SD):\s*([0-9.]+)
+notes:
+  user_notes: 'Before Mean: 0.268281364380091
+
+    Before SD: 0.008808458650611141
+
+    After Mean: 0.2318319257791154
+
+    After SD: 0.004657704276364213
+
+    Improvement: -13.59%'
+  mike_notes: ''
+meta:
+  num_covering_tests: '903'

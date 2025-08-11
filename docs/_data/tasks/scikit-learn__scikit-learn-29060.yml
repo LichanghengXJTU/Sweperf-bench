@@ -1,0 +1,54 @@
+id: scikit-learn__scikit-learn-29060
+status:
+  human: APPROVED
+  llm: COMING_SOON
+comparison:
+  llm_better: COMING_SOON
+repo:
+  org: scikit-learn
+  name: scikit-learn
+  url: https://github.com/scikit-learn/scikit-learn
+  pull_request: https://github.com/scikit-learn/scikit-learn/pull/29060
+  base_commit: 3b0c70b9c03a74835fe260b6b46b3f1ef6af8ba5
+  created_at: '2024-05-21 6:21:15'
+  version: '1.6'
+workload:
+  language: python
+  code: "import timeit\nimport statistics\n\nimport numpy as np\nfrom sklearn.datasets\
+    \ import fetch_california_housing\nfrom sklearn.impute import KNNImputer\nimport\
+    \ pandas as pd\n\ncalhousing = fetch_california_housing()\n\nX = pd.DataFrame(calhousing.data,\
+    \ columns=calhousing.feature_names)\ny = pd.Series(calhousing.target, name='house_value')\n\
+    \nrng = np.random.RandomState(42)\ndensity = 10\nmask = rng.randint(density, size=X.shape)\
+    \ == 0\n\nX_na = X.copy()\nX_na.values[mask] = np.nan\nX_na.values[:, 0] = np.nan\n\
+    \ndef workload():\n    KNNImputer().fit_transform(X_na)\n    \nruntimes = timeit.repeat(workload,\
+    \ number=1, repeat=5)\n\nprint(\"Mean:\", statistics.mean(runtimes))\nprint(\"\
+    Std Dev:\", statistics.stdev(runtimes))\n "
+docker:
+  base_image: docker.io/sweperf/sweperf:scikit-learn__scikit-learn-29060
+  human_image: docker.io/sweperf/sweperf_annotate:scikit-learn__scikit-learn-29060
+  llm_image: PLACEHOLDER
+  commands:
+    run_base: docker run --rm --name bench_{id}_base --mount type=bind,src=<WORKLOAD_PY>,dst=/tmp/workload.py
+      {base_image} /bin/bash -lc 'python /tmp/workload.py' 2>&1
+    run_human: docker run --rm --name bench_{id}_human --mount type=bind,src=<WORKLOAD_PY>,dst=/tmp/workload.py
+      {human_image} /bin/bash -lc 'chmod +x /perf.sh && /perf.sh && python /tmp/workload.py'
+      2>&1
+    run_llm: echo 'LLM image not available yet for {id}. Please fill docker.llm_image.'
+metrics:
+  reducer: mean_std
+  parse_regex:
+    mean: (?i)\bMean:\s*([0-9.]+)
+    std: (?i)(Std Dev|SD):\s*([0-9.]+)
+notes:
+  user_notes: 'Before Mean: 15.842732028814499
+
+    Before SD: 0.12909835606064698
+
+    After Mean: 11.240834431000986
+
+    After SD: 0.12063748305189903
+
+    Improvement: -29.05%'
+  mike_notes: ''
+meta:
+  num_covering_tests: '4'

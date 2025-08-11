@@ -1,0 +1,53 @@
+id: pandas-dev__pandas-53731
+status:
+  human: APPROVED
+  llm: COMING_SOON
+comparison:
+  llm_better: COMING_SOON
+repo:
+  org: pandas-dev
+  name: pandas
+  url: https://github.com/pandas-dev/pandas
+  pull_request: https://github.com/pandas-dev/pandas/pull/53731
+  base_commit: 5a54a81dd5d79e8dbc83a2c1776552cf793f3e2c
+  created_at: '2023-06-19 17:51:39'
+  version: '2'
+workload:
+  language: python
+  code: "\nimport timeit\nimport statistics\n\nimport pandas as pd\nimport numpy as\
+    \ np\n\nN = 1_000_000\nmethods = ('sum', 'var', 'mean', 'max', 'min')\n\ndf =\
+    \ pd.DataFrame(np.random.randn(N, 10), columns=list(\"abcdefghij\"))\ndf[\"key\"\
+    ] = np.random.randint(0, 100, size=N)\n\ndef workload():\n    for method in methods:\n\
+    \        df.groupby(\"key\").agg(method, engine=\"numba\")\n    \n# Drop first\
+    \ run due to numba JIT.\nruntimes = timeit.repeat(workload, number=1, repeat=11)[-10:]\n\
+    \n# Print runtime mean and std deviation.\nprint(\"Mean:\", statistics.mean(runtimes))\n\
+    print(\"Std Dev:\", statistics.stdev(runtimes))\n"
+docker:
+  base_image: docker.io/sweperf/sweperf:pandas-dev__pandas-53731
+  human_image: docker.io/sweperf/sweperf_annotate:pandas-dev__pandas-53731
+  llm_image: PLACEHOLDER
+  commands:
+    run_base: docker run --rm --name bench_{id}_base --mount type=bind,src=<WORKLOAD_PY>,dst=/tmp/workload.py
+      {base_image} /bin/bash -lc 'python /tmp/workload.py' 2>&1
+    run_human: docker run --rm --name bench_{id}_human --mount type=bind,src=<WORKLOAD_PY>,dst=/tmp/workload.py
+      {human_image} /bin/bash -lc 'chmod +x /perf.sh && /perf.sh && python /tmp/workload.py'
+      2>&1
+    run_llm: echo 'LLM image not available yet for {id}. Please fill docker.llm_image.'
+metrics:
+  reducer: mean_std
+  parse_regex:
+    mean: (?i)\bMean:\s*([0-9.]+)
+    std: (?i)(Std Dev|SD):\s*([0-9.]+)
+notes:
+  user_notes: 'Before Mean: 52.13825033198227
+
+    Before SD: 0.02548914679012315
+
+    After Mean: 0.29314350719796495
+
+    After SD: 0.013804954228004363
+
+    Improvement: -99.44%'
+  mike_notes: ''
+meta:
+  num_covering_tests: '920'

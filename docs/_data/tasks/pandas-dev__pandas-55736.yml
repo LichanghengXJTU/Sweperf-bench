@@ -1,0 +1,60 @@
+id: pandas-dev__pandas-55736
+status:
+  human: APPROVED
+  llm: COMING_SOON
+comparison:
+  llm_better: COMING_SOON
+repo:
+  org: pandas-dev
+  name: pandas
+  url: https://github.com/pandas-dev/pandas
+  pull_request: https://github.com/pandas-dev/pandas/pull/55736
+  base_commit: ef52feaf66386e77436cd326b957b58cb33e0126
+  created_at: '2023-10-27 20:10:06'
+  version: '2.1'
+workload:
+  language: python
+  code: "import timeit\nimport statistics\n\nimport pandas as pd\ntry:\n    import\
+    \ pandas._testing as tm\nexcept ImportError:\n    import pandas.util.testing as\
+    \ tm\n\ndef test(s):\n    s.str.count(\"A\")\n    s.str.endswith(\"A\")\n    s.str.rfind(\"\
+    [A-Z]+\")\n    s.str.fullmatch(\"A\")\n    s.str.get(0)\n    s.str.len()\n   \
+    \ s.str.match(\"A\")\n    s.str.normalize(\"NFC\")\n    s.str.replace(\"A\", \"\
+    \\x01\\x01\")\n    s.str.slice(5, 15, 2)\n    s.str.startswith(\"A\")\n    s.str.strip(\"\
+    A\")\n    s.str.rstrip(\"A\")\n    s.str.lstrip(\"A\")\n    s.str.upper()\n  \
+    \  s.str.lower()\n    s.str.zfill(10)\n    s.str.isalpha()\n    s.str.isdecimal()\n\
+    \    s.str.isdigit()\n    s.str.islower()\n    s.str.isnumeric()\n    s.str.isspace()\n\
+    \    s.str.istitle()\n    s.str.isupper()\n\nseries = []\nfor dtype in ['str',\
+    \ 'string[python]']:\n    series.append(pd.Series(tm.makeStringIndex(10 ** 5),\
+    \ dtype=dtype))\n    \ndef workload():\n    for s in series:\n        test(s)\n\
+    \nruntimes = timeit.repeat(workload, number=5, repeat=25)\n\n# Print runtime mean\
+    \ and std deviation.\nprint(\"Mean:\", statistics.mean(runtimes))\nprint(\"Std\
+    \ Dev:\", statistics.stdev(runtimes))\n"
+docker:
+  base_image: docker.io/sweperf/sweperf:pandas-dev__pandas-55736
+  human_image: docker.io/sweperf/sweperf_annotate:pandas-dev__pandas-55736
+  llm_image: PLACEHOLDER
+  commands:
+    run_base: docker run --rm --name bench_{id}_base --mount type=bind,src=<WORKLOAD_PY>,dst=/tmp/workload.py
+      {base_image} /bin/bash -lc 'python /tmp/workload.py' 2>&1
+    run_human: docker run --rm --name bench_{id}_human --mount type=bind,src=<WORKLOAD_PY>,dst=/tmp/workload.py
+      {human_image} /bin/bash -lc 'chmod +x /perf.sh && /perf.sh && python /tmp/workload.py'
+      2>&1
+    run_llm: echo 'LLM image not available yet for {id}. Please fill docker.llm_image.'
+metrics:
+  reducer: mean_std
+  parse_regex:
+    mean: (?i)\bMean:\s*([0-9.]+)
+    std: (?i)(Std Dev|SD):\s*([0-9.]+)
+notes:
+  user_notes: 'Before Mean: 4.070095866912743
+
+    Before SD: 0.01592645243833165
+
+    After Mean: 3.658759930592496
+
+    After SD: 0.013329541372446447
+
+    Improvement: -10.11%'
+  mike_notes: ''
+meta:
+  num_covering_tests: '7'

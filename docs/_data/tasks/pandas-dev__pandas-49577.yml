@@ -1,0 +1,60 @@
+id: pandas-dev__pandas-49577
+status:
+  human: APPROVED
+  llm: COMING_SOON
+comparison:
+  llm_better: COMING_SOON
+repo:
+  org: pandas-dev
+  name: pandas
+  url: https://github.com/pandas-dev/pandas
+  pull_request: https://github.com/pandas-dev/pandas/pull/49577
+  base_commit: d47e052379826ab6085e145e6ee2c654b0d1c471
+  created_at: '2022-11-08 12:23:48'
+  version: '1.5'
+workload:
+  language: python
+  code: "import timeit\nimport statistics\n\nimport pandas as pd\nimport numpy as\
+    \ np\n\ntry:\n    import pandas._testing as tm\nexcept ImportError:\n    import\
+    \ pandas.util.testing as tm\n\n\nN = 10**5\nlevel1 = range(1000)\n\nlevel2 = pd.date_range(start=\"\
+    1/1/2000\", periods=N // 1000)\ndates_midx = pd.MultiIndex.from_product([level1,\
+    \ level2])\n\nlevel2 = range(N // 1000)\nint_midx = pd.MultiIndex.from_product([level1,\
+    \ level2])\n\nlevel2 = tm.makeStringIndex(N // 1000).values\nstr_midx = pd.MultiIndex.from_product([level1,\
+    \ level2])\n\ndata = {\n    \"datetime\": dates_midx,\n    \"int\": int_midx,\n\
+    \    \"string\": str_midx,\n}\n\nvalues_small = {\n    \"datetime\": dates_midx[:100],\n\
+    \    \"int\": int_midx[:100],\n    \"string\": str_midx[:100],\n}\n\nvalues_large\
+    \ = {\n    \"datetime\": dates_midx[100:],\n    \"int\": int_midx[100:],\n   \
+    \ \"string\": str_midx[100:],\n}\n\ndef workload():\n    for k in data.keys():\n\
+    \        data[k].isin(values_small[k])\n        data[k].isin(values_large[k])\n\
+    \nruntimes = timeit.repeat(workload, number=1, repeat=100)\n\n# Print runtime\
+    \ mean and std deviation.\nprint(\"Mean:\", statistics.mean(runtimes))\nprint(\"\
+    Std Dev:\", statistics.stdev(runtimes))\n"
+docker:
+  base_image: docker.io/sweperf/sweperf:pandas-dev__pandas-49577
+  human_image: docker.io/sweperf/sweperf_annotate:pandas-dev__pandas-49577
+  llm_image: PLACEHOLDER
+  commands:
+    run_base: docker run --rm --name bench_{id}_base --mount type=bind,src=<WORKLOAD_PY>,dst=/tmp/workload.py
+      {base_image} /bin/bash -lc 'python /tmp/workload.py' 2>&1
+    run_human: docker run --rm --name bench_{id}_human --mount type=bind,src=<WORKLOAD_PY>,dst=/tmp/workload.py
+      {human_image} /bin/bash -lc 'chmod +x /perf.sh && /perf.sh && python /tmp/workload.py'
+      2>&1
+    run_llm: echo 'LLM image not available yet for {id}. Please fill docker.llm_image.'
+metrics:
+  reducer: mean_std
+  parse_regex:
+    mean: (?i)\bMean:\s*([0-9.]+)
+    std: (?i)(Std Dev|SD):\s*([0-9.]+)
+notes:
+  user_notes: 'Before Mean: 0.2152292378904531
+
+    Before SD: 0.0035502825012806486
+
+    After Mean: 0.03287824132537935
+
+    After SD: 0.0012208878043312695
+
+    Improvement: -84.72%'
+  mike_notes: ''
+meta:
+  num_covering_tests: '896'

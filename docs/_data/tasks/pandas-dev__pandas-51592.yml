@@ -1,0 +1,80 @@
+id: pandas-dev__pandas-51592
+status:
+  human: APPROVED
+  llm: COMING_SOON
+comparison:
+  llm_better: COMING_SOON
+repo:
+  org: pandas-dev
+  name: pandas
+  url: https://github.com/pandas-dev/pandas
+  pull_request: https://github.com/pandas-dev/pandas/pull/51592
+  base_commit: ade04183a0148a0b9b579938c13d1bdf87743457
+  created_at: '2023-02-23 17:43:34'
+  version: '1.5'
+workload:
+  language: python
+  code: "\nimport timeit\nimport statistics\n\nimport pandas as pd\nimport numpy as\
+    \ np\nimport pandas._testing as tm\nimport itertools\n\nm = 50\nn = 1000\ncols\
+    \ = [\"jim\", \"joe\", \"jolie\", \"joline\", \"jolia\"]\n\nvals = [\n    np.random.randint(0,\
+    \ 10, n),\n    np.random.choice(list(\"abcdefghij\"), n),\n    np.random.choice(pd.date_range(\"\
+    20141009\", periods=10).tolist(), n),\n    np.random.choice(list(\"ZYXWVUTSRQ\"\
+    ), n),\n    np.random.randn(n),\n]\nvals = list(map(tuple, zip(*vals)))\n\n# bunch\
+    \ of keys for testing\nkeys = [\n    np.random.randint(0, 11, m),\n    np.random.choice(list(\"\
+    abcdefghijk\"), m),\n    np.random.choice(pd.date_range(\"20141009\", periods=11).tolist(),\
+    \ m),\n    np.random.choice(list(\"ZYXWVUTSRQP\"), m),\n]\nkeys = list(map(tuple,\
+    \ zip(*keys)))\nkeys += list(map(lambda t: t[:-1], vals[:: n // m]))\n\n\n# covers\
+    \ both unique index and non-unique index\ndf = pd.DataFrame(vals, columns=cols)\n\
+    a = pd.concat([df, df])\nb = df.drop_duplicates(subset=cols[:-1])\n\n\ndef validate(mi,\
+    \ df, key):\n    # check indexing into a multi-index before & past the lexsort\
+    \ depth\n\n    mask = np.ones(len(df)).astype(\"bool\")\n\n    # test for all\
+    \ partials of this key\n    for i, k in enumerate(key):\n        mask &= df.iloc[:,\
+    \ i] == k\n\n        if not mask.any():\n            assert key[: i + 1] not in\
+    \ mi.index\n            continue\n\n        assert key[: i + 1] in mi.index\n\
+    \        right = df[mask].copy()\n\n        if i + 1 != len(key):  # partial key\n\
+    \            return_value = right.drop(cols[: i + 1], axis=1, inplace=True)\n\
+    \            assert return_value is None\n            return_value = right.set_index(cols[i\
+    \ + 1 : -1], inplace=True)\n            assert return_value is None\n        \
+    \    tm.assert_frame_equal(mi.loc[key[: i + 1]], right)\n\n        else:  # full\
+    \ key\n            return_value = right.set_index(cols[:-1], inplace=True)\n \
+    \           assert return_value is None\n            if len(right) == 1:  # single\
+    \ hit\n                right = pd.Series(\n                    right[\"jolia\"\
+    ].values, name=right.index[0], index=[\"jolia\"]\n                )\n        \
+    \        tm.assert_series_equal(mi.loc[key[: i + 1]], right)\n            else:\
+    \  # multi hit\n                tm.assert_frame_equal(mi.loc[key[: i + 1]], right)\n\
+    \n\ndef workload():\n    for lexsort_depth, key, frame in itertools.product(list(range(5)),\
+    \ keys, [a, b]):\n        if lexsort_depth == 0:\n            df = frame.copy()\n\
+    \        else:\n            df = frame.sort_values(by=cols[:lexsort_depth])\n\
+    \        \n        mi = df.set_index(cols[:-1])\n        assert not mi.index._lexsort_depth\
+    \ < lexsort_depth\n        validate(mi, df, key)\n\nruntimes = timeit.repeat(workload,\
+    \ number=1, repeat=3)\n\n# Print runtime mean and std deviation.\nprint(\"Mean:\"\
+    , statistics.mean(runtimes))\nprint(\"Std Dev:\", statistics.stdev(runtimes))\n"
+docker:
+  base_image: docker.io/sweperf/sweperf:pandas-dev__pandas-51592
+  human_image: docker.io/sweperf/sweperf_annotate:pandas-dev__pandas-51592
+  llm_image: PLACEHOLDER
+  commands:
+    run_base: docker run --rm --name bench_{id}_base --mount type=bind,src=<WORKLOAD_PY>,dst=/tmp/workload.py
+      {base_image} /bin/bash -lc 'python /tmp/workload.py' 2>&1
+    run_human: docker run --rm --name bench_{id}_human --mount type=bind,src=<WORKLOAD_PY>,dst=/tmp/workload.py
+      {human_image} /bin/bash -lc 'chmod +x /perf.sh && /perf.sh && python /tmp/workload.py'
+      2>&1
+    run_llm: echo 'LLM image not available yet for {id}. Please fill docker.llm_image.'
+metrics:
+  reducer: mean_std
+  parse_regex:
+    mean: (?i)\bMean:\s*([0-9.]+)
+    std: (?i)(Std Dev|SD):\s*([0-9.]+)
+notes:
+  user_notes: 'Before Mean: 20.00204855632425
+
+    Before SD: 0.03506428002807868
+
+    After Mean: 10.35007483131873
+
+    After SD: 0.047930397963624714
+
+    Improvement: -48.25%'
+  mike_notes: ''
+meta:
+  num_covering_tests: '908'

@@ -1,0 +1,56 @@
+id: dask__dask-10922
+status:
+  human: APPROVED
+  llm: COMING_SOON
+comparison:
+  llm_better: COMING_SOON
+repo:
+  org: dask
+  name: dask
+  url: https://github.com/dask/dask
+  pull_request: https://github.com/dask/dask/pull/10922
+  base_commit: 07099e5c0385983ad1cab805e42e66d03fc3f6d3
+  created_at: '2024-02-14 10:09:35'
+  version: '2024.2'
+workload:
+  language: python
+  code: "import timeit\nimport statistics\n\nimport dask.array as da\nimport dask.dataframe\
+    \ as dd\nfrom dask.dataframe.groupby import _nunique_df_chunk\n\n\ndef setup():\n\
+    \    global ddf\n    n_rows       = 500_000          \n    n_parts      = 5  \
+    \                \n    part_size    = n_rows // n_parts  \n\n    grp = da.arange(n_rows,\
+    \ chunks=part_size)\n    val = da.random.random(n_rows, chunks=part_size)\n\n\
+    \    ddf = dd.concat(\n        [dd.from_dask_array(grp, columns=\"grp\"),\n  \
+    \       dd.from_dask_array(val, columns=\"val\")],\n        axis=1,\n    ).persist()\n\
+    \ndef workload():\n    (_nunique_df_chunk(ddf, \"grp\", name=\"val\")).compute()\n\
+    \nruntimes = timeit.repeat(workload, number=1, repeat=3, setup=setup)\n\n# Print\
+    \ runtime mean and std deviation.\nprint(\"Mean:\", statistics.mean(runtimes))\n\
+    print(\"Std Dev:\", statistics.stdev(runtimes))"
+docker:
+  base_image: docker.io/sweperf/sweperf:dask__dask-10922
+  human_image: docker.io/sweperf/sweperf_annotate:dask__dask-10922
+  llm_image: PLACEHOLDER
+  commands:
+    run_base: docker run --rm --name bench_{id}_base --mount type=bind,src=<WORKLOAD_PY>,dst=/tmp/workload.py
+      {base_image} /bin/bash -lc 'python /tmp/workload.py' 2>&1
+    run_human: docker run --rm --name bench_{id}_human --mount type=bind,src=<WORKLOAD_PY>,dst=/tmp/workload.py
+      {human_image} /bin/bash -lc 'chmod +x /perf.sh && /perf.sh && python /tmp/workload.py'
+      2>&1
+    run_llm: echo 'LLM image not available yet for {id}. Please fill docker.llm_image.'
+metrics:
+  reducer: mean_std
+  parse_regex:
+    mean: (?i)\bMean:\s*([0-9.]+)
+    std: (?i)(Std Dev|SD):\s*([0-9.]+)
+notes:
+  user_notes: 'Before Mean: 54.85953725930303
+
+    Before SD: 0.37959229633659797
+
+    After Mean: 0.1686993149050977
+
+    After SD: 0.009041960880500665
+
+    Improvement: -99.69%'
+  mike_notes: ''
+meta:
+  num_covering_tests: '2'

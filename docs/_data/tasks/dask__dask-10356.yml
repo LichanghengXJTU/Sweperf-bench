@@ -1,0 +1,49 @@
+id: dask__dask-10356
+status:
+  human: APPROVED
+  llm: COMING_SOON
+comparison:
+  llm_better: COMING_SOON
+repo:
+  org: dask
+  name: dask
+  url: https://github.com/dask/dask
+  pull_request: https://github.com/dask/dask/pull/10356
+  base_commit: bdc71ba5a4ad7bfb0265a52a1b816936604845fe
+  created_at: '2023-06-14 10:53:34'
+  version: '2023.6'
+workload:
+  language: python
+  code: "import timeit\nimport statistics\n\nfrom dask.bag.core import random_state_data_python\n\
+    \ndef workload():\n    random_state_data_python(10000, 0)\n    \nruntimes = timeit.repeat(workload,\
+    \ number=1, repeat=100)\n\n# Print runtime mean and std deviation.\nprint(\"Mean:\"\
+    , statistics.mean(runtimes))\nprint(\"Std Dev:\", statistics.stdev(runtimes))\n"
+docker:
+  base_image: docker.io/sweperf/sweperf:dask__dask-10356
+  human_image: docker.io/sweperf/sweperf_annotate:dask__dask-10356
+  llm_image: PLACEHOLDER
+  commands:
+    run_base: docker run --rm --name bench_{id}_base --mount type=bind,src=<WORKLOAD_PY>,dst=/tmp/workload.py
+      {base_image} /bin/bash -lc 'python /tmp/workload.py' 2>&1
+    run_human: docker run --rm --name bench_{id}_human --mount type=bind,src=<WORKLOAD_PY>,dst=/tmp/workload.py
+      {human_image} /bin/bash -lc 'chmod +x /perf.sh && /perf.sh && python /tmp/workload.py'
+      2>&1
+    run_llm: echo 'LLM image not available yet for {id}. Please fill docker.llm_image.'
+metrics:
+  reducer: mean_std
+  parse_regex:
+    mean: (?i)\bMean:\s*([0-9.]+)
+    std: (?i)(Std Dev|SD):\s*([0-9.]+)
+notes:
+  user_notes: 'Before Mean: 3.7729226380574983
+
+    Before SD: 0.013510905872480907
+
+    After Mean: 0.2821831404173281
+
+    After SD: 0.011016035903977829
+
+    Improvement: -92.52%'
+  mike_notes: ''
+meta:
+  num_covering_tests: '1'

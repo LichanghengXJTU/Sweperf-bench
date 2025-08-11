@@ -1,0 +1,59 @@
+id: pandas-dev__pandas-53231
+status:
+  human: APPROVED
+  llm: COMING_SOON
+comparison:
+  llm_better: COMING_SOON
+repo:
+  org: pandas-dev
+  name: pandas
+  url: https://github.com/pandas-dev/pandas
+  pull_request: https://github.com/pandas-dev/pandas/pull/53231
+  base_commit: a1f050aef65c218ebe1ca12adcf011b030553042
+  created_at: '2023-05-15 8:20:31'
+  version: '2'
+workload:
+  language: python
+  code: "import timeit\nimport statistics\n\nimport pandas as pd\nimport numpy as\
+    \ np\n\nN = 10_000\nunit_pairs = [\n    (\"ns\", \"ns\"),\n    (\"ms\", \"ms\"\
+    ),\n    (\"ns\", \"ms\"),\n]\ntimezones = [None, \"Europe/Brussels\"]\n\nmerge_registry\
+    \ = []\n\nfor units in unit_pairs:\n    for tz in timezones:\n        unit_left,\
+    \ unit_right = units\n        keys = pd.Series(pd.date_range(\"2012-01-01\", freq=\"\
+    T\", periods=N, tz=tz))\n\n        left = pd.DataFrame({\n            \"key\"\
+    : keys.sample(N * 10, replace=True).dt.as_unit(unit_left),\n            \"value1\"\
+    : np.random.randn(N * 10),\n        })\n        right = pd.DataFrame({\n     \
+    \       \"key\": keys[:8000].dt.as_unit(unit_right),\n            \"value2\":\
+    \ np.random.randn(8000),\n        })\n\n        merge_registry.append((left, right))\n\
+    \n\ndef workload():\n    for left, right in merge_registry:\n        pd.merge(left,\
+    \ right)\n\n\nruntimes = timeit.repeat(workload, number=5, repeat=100)\n\n# Print\
+    \ runtime mean and std deviation.\nprint(\"Mean:\", statistics.mean(runtimes))\n\
+    print(\"Std Dev:\", statistics.stdev(runtimes))\n\n"
+docker:
+  base_image: docker.io/sweperf/sweperf:pandas-dev__pandas-53231
+  human_image: docker.io/sweperf/sweperf_annotate:pandas-dev__pandas-53231
+  llm_image: PLACEHOLDER
+  commands:
+    run_base: docker run --rm --name bench_{id}_base --mount type=bind,src=<WORKLOAD_PY>,dst=/tmp/workload.py
+      {base_image} /bin/bash -lc 'python /tmp/workload.py' 2>&1
+    run_human: docker run --rm --name bench_{id}_human --mount type=bind,src=<WORKLOAD_PY>,dst=/tmp/workload.py
+      {human_image} /bin/bash -lc 'chmod +x /perf.sh && /perf.sh && python /tmp/workload.py'
+      2>&1
+    run_llm: echo 'LLM image not available yet for {id}. Please fill docker.llm_image.'
+metrics:
+  reducer: mean_std
+  parse_regex:
+    mean: (?i)\bMean:\s*([0-9.]+)
+    std: (?i)(Std Dev|SD):\s*([0-9.]+)
+notes:
+  user_notes: 'Before Mean: 1.3836005068203667
+
+    Before SD: 0.0070617969136500605
+
+    After Mean: 0.2506379101786297
+
+    After SD: 0.0061612867117170214
+
+    Improvement: -81.89%'
+  mike_notes: ''
+meta:
+  num_covering_tests: '43'

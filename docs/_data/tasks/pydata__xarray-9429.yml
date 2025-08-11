@@ -1,0 +1,58 @@
+id: pydata__xarray-9429
+status:
+  human: APPROVED
+  llm: COMING_SOON
+comparison:
+  llm_better: COMING_SOON
+repo:
+  org: pydata
+  name: xarray
+  url: https://github.com/pydata/xarray
+  pull_request: https://github.com/pydata/xarray/pull/9429
+  base_commit: a8c989673d0ea0cd099ede136efa117eaeb7ae1d
+  created_at: '2024-09-04 0:05:07'
+  version: '2024.05'
+workload:
+  language: python
+  code: "import timeit\nimport statistics\n\nimport cftime\nimport numpy as np\nimport\
+    \ xarray as xr\n\nfrom datetime import datetime\n\ndef setup():\n    global da\n\
+    \n    arr = np.random.randn(10, 10, 365 * 30)\n    time = xr.date_range(\"2000\"\
+    , periods=30 * 365, use_cftime=True)\n\n    labeled_time = [datetime(int(t.year),\
+    \ int(t.month), 1) for t in time.values]\n    \n    asda = xr.DataArray(time)\n\
+    \    labeled_time = []\n    for year, month in zip(asda.dt.year, asda.dt.month):\n\
+    \        labeled_time.append(cftime.datetime(year, month, 1))\n\n    da = xr.DataArray(\n\
+    \        arr,\n        dims=(\"y\", \"x\", \"time\"),\n        coords={\"time\"\
+    : time, \"time2\": (\"time\", labeled_time)},\n    )\n\ndef workload():\n    da.groupby(\"\
+    time.month\")\n    for use_flox in [True, False]:\n        with xr.set_options(use_flox=use_flox):\n\
+    \            da.groupby(\"time.year\").mean()\n\nruntimes = timeit.repeat(workload,\
+    \ number=1, repeat=10, setup=setup)\n\nprint(\"Mean:\", statistics.mean(runtimes))\n\
+    print(\"Std Dev:\", statistics.stdev(runtimes))"
+docker:
+  base_image: docker.io/sweperf/sweperf:pydata__xarray-9429
+  human_image: docker.io/sweperf/sweperf_annotate:pydata__xarray-9429
+  llm_image: PLACEHOLDER
+  commands:
+    run_base: docker run --rm --name bench_{id}_base --mount type=bind,src=<WORKLOAD_PY>,dst=/tmp/workload.py
+      {base_image} /bin/bash -lc 'python /tmp/workload.py' 2>&1
+    run_human: docker run --rm --name bench_{id}_human --mount type=bind,src=<WORKLOAD_PY>,dst=/tmp/workload.py
+      {human_image} /bin/bash -lc 'chmod +x /perf.sh && /perf.sh && python /tmp/workload.py'
+      2>&1
+    run_llm: echo 'LLM image not available yet for {id}. Please fill docker.llm_image.'
+metrics:
+  reducer: mean_std
+  parse_regex:
+    mean: (?i)\bMean:\s*([0-9.]+)
+    std: (?i)(Std Dev|SD):\s*([0-9.]+)
+notes:
+  user_notes: 'Before Mean: 0.42156128679635
+
+    Before SD: 0.2631569773242383
+
+    After Mean: 0.1122585647914093
+
+    After SD: 0.27131329549390637
+
+    Improvement: -73.37%'
+  mike_notes: ''
+meta:
+  num_covering_tests: '13'

@@ -1,0 +1,59 @@
+id: scipy__scipy-11358
+status:
+  human: APPROVED
+  llm: COMING_SOON
+comparison:
+  llm_better: COMING_SOON
+repo:
+  org: scipy
+  name: scipy
+  url: https://github.com/scipy/scipy
+  pull_request: https://github.com/scipy/scipy/pull/11358
+  base_commit: e53897db8416c0165b32883396023009d47cff22
+  created_at: '2020-01-13 18:05:01'
+  version: '1.4'
+workload:
+  language: python
+  code: "import timeit\nimport statistics\n\nfrom scipy.optimize._linprog_util import\
+    \ _presolve, _clean_inputs, _LPProblem\nfrom scipy.sparse import csr_matrix\n\
+    import numpy as np\nimport os\n\nmeth = \"sparse\"\nprob = \"80BAU3B\"\n\ndir_path\
+    \ = os.path.dirname(\"benchmarks/benchmarks/\")\ndatafile = os.path.join(dir_path,\
+    \ \"linprog_benchmark_files\",\n                        prob + \".npz\")\ndata\
+    \ = np.load(datafile, allow_pickle=True)\n\nc, A_eq, A_ub, b_ub, b_eq = (data[\"\
+    c\"], data[\"A_eq\"], data[\"A_ub\"],\n                                data[\"\
+    b_ub\"], data[\"b_eq\"])\nbounds = np.squeeze(data[\"bounds\"])\nx0 = np.zeros(c.shape)\n\
+    \nA_eq = csr_matrix(A_eq)\nA_ub = csr_matrix(A_ub)\n\ndef setup():\n    global\
+    \ lp_cleaned\n    lp = _LPProblem(c, A_ub, b_ub, A_eq, b_eq, bounds, x0)\n   \
+    \ lp_cleaned = _clean_inputs(lp)\n\ndef workload():\n    global lp_cleaned\n \
+    \   _presolve(lp_cleaned, rr=False, tol=1e-9)\n\nruntimes = timeit.repeat(workload,\
+    \ number=1, repeat=25, setup=setup)\n\nprint(\"Mean:\", statistics.mean(runtimes))\n\
+    print(\"Std Dev:\", statistics.stdev(runtimes))"
+docker:
+  base_image: docker.io/sweperf/sweperf:scipy__scipy-11358
+  human_image: docker.io/sweperf/sweperf_annotate:scipy__scipy-11358
+  llm_image: PLACEHOLDER
+  commands:
+    run_base: docker run --rm --name bench_{id}_base --mount type=bind,src=<WORKLOAD_PY>,dst=/tmp/workload.py
+      {base_image} /bin/bash -lc 'python /tmp/workload.py' 2>&1
+    run_human: docker run --rm --name bench_{id}_human --mount type=bind,src=<WORKLOAD_PY>,dst=/tmp/workload.py
+      {human_image} /bin/bash -lc 'chmod +x /perf.sh && /perf.sh && python /tmp/workload.py'
+      2>&1
+    run_llm: echo 'LLM image not available yet for {id}. Please fill docker.llm_image.'
+metrics:
+  reducer: mean_std
+  parse_regex:
+    mean: (?i)\bMean:\s*([0-9.]+)
+    std: (?i)(Std Dev|SD):\s*([0-9.]+)
+notes:
+  user_notes: 'Before Mean: 0.4967294121615123
+
+    Before SD: 0.002219301745277715
+
+    After Mean: 0.015958753956947475
+
+    After SD: 0.0005166945958808974
+
+    Improvement: -96.79%'
+  mike_notes: ''
+meta:
+  num_covering_tests: '1'

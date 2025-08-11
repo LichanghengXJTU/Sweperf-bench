@@ -1,0 +1,49 @@
+id: pydata__xarray-9808
+status:
+  human: APPROVED
+  llm: COMING_SOON
+comparison:
+  llm_better: COMING_SOON
+repo:
+  org: pydata
+  name: xarray
+  url: https://github.com/pydata/xarray
+  pull_request: https://github.com/pydata/xarray/pull/9808
+  base_commit: ad5c7ed52310efb11a70f3e06f93dfc289e23b0e
+  created_at: '2024-11-21 18:33:28'
+  version: '2024.05'
+workload:
+  language: python
+  code: "import statistics\nimport timeit\n\nimport xarray as xr\n\ndef workload():\n\
+    \    xr.open_zarr(\"gs://gcp-public-data-arco-era5/ar/full_37-1h-0p25deg-chunk-1.zarr-v3\"\
+    )\n\nruntimes = timeit.repeat(workload, number=1, repeat=3)\n\nprint(\"Mean:\"\
+    , statistics.mean(runtimes))\nprint(\"Std Dev:\", statistics.stdev(runtimes))"
+docker:
+  base_image: docker.io/sweperf/sweperf:pydata__xarray-9808
+  human_image: docker.io/sweperf/sweperf_annotate:pydata__xarray-9808
+  llm_image: PLACEHOLDER
+  commands:
+    run_base: docker run --rm --name bench_{id}_base --mount type=bind,src=<WORKLOAD_PY>,dst=/tmp/workload.py
+      {base_image} /bin/bash -lc 'python /tmp/workload.py' 2>&1
+    run_human: docker run --rm --name bench_{id}_human --mount type=bind,src=<WORKLOAD_PY>,dst=/tmp/workload.py
+      {human_image} /bin/bash -lc 'chmod +x /perf.sh && /perf.sh && python /tmp/workload.py'
+      2>&1
+    run_llm: echo 'LLM image not available yet for {id}. Please fill docker.llm_image.'
+metrics:
+  reducer: mean_std
+  parse_regex:
+    mean: (?i)\bMean:\s*([0-9.]+)
+    std: (?i)(Std Dev|SD):\s*([0-9.]+)
+notes:
+  user_notes: 'Before Mean: 149.91336881668153
+
+    Before SD: 18.13039147421969
+
+    After Mean: 115.74431956033611
+
+    After SD: 14.867856215122492
+
+    Improvement: -22.79%'
+  mike_notes: ''
+meta:
+  num_covering_tests: '67'

@@ -1,0 +1,56 @@
+id: dask__dask-7172
+status:
+  human: APPROVED
+  llm: COMING_SOON
+comparison:
+  llm_better: COMING_SOON
+repo:
+  org: dask
+  name: dask
+  url: https://github.com/dask/dask
+  pull_request: https://github.com/dask/dask/pull/7172
+  base_commit: 3d0e7bd93d6c6c67208765fd0a81f13088bb53a7
+  created_at: '2021-02-04 19:48:36'
+  version: '2021.02'
+workload:
+  language: python
+  code: "import timeit\nimport statistics\n\nimport dask.array as da\nfrom dask.array.percentile\
+    \ import merge_percentiles\nimport numpy as np\n\nnquantiles = 100\nndatasets\
+    \ = 100\n\ndef setup():\n    scale = 100\n    calculated_quantiles = nquantiles//2\n\
+    \n    global finalq, qs, vals, Ns\n\n    finalq = np.floor(np.random.rand(nquantiles)\
+    \ * scale)\n    qs = list(np.floor(np.random.rand(ndatasets, calculated_quantiles)\
+    \ * scale))\n    vals = list(np.random.rand(ndatasets, calculated_quantiles))\n\
+    \    Ns = np.ones(ndatasets) * 100\n    \ndef workload():\n    global finalq,\
+    \ qs, vals, Ns\n\n    merge_percentiles(finalq, qs, vals, Ns=Ns)\n\nruntimes =\
+    \ timeit.repeat(workload, number=1, repeat=1000, setup=setup)\n\n# Print runtime\
+    \ mean and std deviation.\nprint(\"Mean:\", statistics.mean(runtimes))\nprint(\"\
+    Std Dev:\", statistics.stdev(runtimes))\n\n"
+docker:
+  base_image: docker.io/sweperf/sweperf:dask__dask-7172
+  human_image: docker.io/sweperf/sweperf_annotate:dask__dask-7172
+  llm_image: PLACEHOLDER
+  commands:
+    run_base: docker run --rm --name bench_{id}_base --mount type=bind,src=<WORKLOAD_PY>,dst=/tmp/workload.py
+      {base_image} /bin/bash -lc 'python /tmp/workload.py' 2>&1
+    run_human: docker run --rm --name bench_{id}_human --mount type=bind,src=<WORKLOAD_PY>,dst=/tmp/workload.py
+      {human_image} /bin/bash -lc 'chmod +x /perf.sh && /perf.sh && python /tmp/workload.py'
+      2>&1
+    run_llm: echo 'LLM image not available yet for {id}. Please fill docker.llm_image.'
+metrics:
+  reducer: mean_std
+  parse_regex:
+    mean: (?i)\bMean:\s*([0-9.]+)
+    std: (?i)(Std Dev|SD):\s*([0-9.]+)
+notes:
+  user_notes: 'Before Mean: 0.004085873172967694
+
+    Before SD: 6.44049667837242e-05
+
+    After Mean: 0.001920907359221019
+
+    After SD: 7.982501373817504e-05
+
+    Improvement: -52.99%'
+  mike_notes: ''
+meta:
+  num_covering_tests: '1'

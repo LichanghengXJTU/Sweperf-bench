@@ -1,0 +1,50 @@
+id: numpy__numpy-26130
+status:
+  human: APPROVED
+  llm: COMING_SOON
+comparison:
+  llm_better: COMING_SOON
+repo:
+  org: numpy
+  name: numpy
+  url: https://github.com/numpy/numpy
+  pull_request: https://github.com/numpy/numpy/pull/26130
+  base_commit: aa0cc043d1fe51e61024842b21905e11a2a4cee6
+  created_at: '2024-03-25 10:14:34'
+  version: '1.26'
+workload:
+  language: python
+  code: "import timeit\nimport statistics\n\nimport numpy as np\nfrom numpy.polynomial\
+    \ import Polynomial\n\nx = np.array([1, 2, 3])\nzero_d = np.float64(1.)\n\ndef\
+    \ workload():\n    np.atleast_1d(x)\n    \nruntimes = timeit.repeat(workload,\
+    \ number=1, repeat=10**6)\n\nprint(\"Mean:\", statistics.mean(runtimes))\nprint(\"\
+    Std Dev:\", statistics.stdev(runtimes))"
+docker:
+  base_image: docker.io/sweperf/sweperf:numpy__numpy-26130
+  human_image: docker.io/sweperf/sweperf_annotate:numpy__numpy-26130
+  llm_image: PLACEHOLDER
+  commands:
+    run_base: docker run --rm --name bench_{id}_base --mount type=bind,src=<WORKLOAD_PY>,dst=/tmp/workload.py
+      {base_image} /bin/bash -lc 'python /tmp/workload.py' 2>&1
+    run_human: docker run --rm --name bench_{id}_human --mount type=bind,src=<WORKLOAD_PY>,dst=/tmp/workload.py
+      {human_image} /bin/bash -lc 'chmod +x /perf.sh && /perf.sh && python /tmp/workload.py'
+      2>&1
+    run_llm: echo 'LLM image not available yet for {id}. Please fill docker.llm_image.'
+metrics:
+  reducer: mean_std
+  parse_regex:
+    mean: (?i)\bMean:\s*([0-9.]+)
+    std: (?i)(Std Dev|SD):\s*([0-9.]+)
+notes:
+  user_notes: 'Before Mean: 3.563228159910068e-07
+
+    Before SD: 1.2454096076386103e-07
+
+    After Mean: 2.915653828822542e-07
+
+    After SD: 1.1499756265632308e-07
+
+    Improvement: -18.17%'
+  mike_notes: ''
+meta:
+  num_covering_tests: '201'

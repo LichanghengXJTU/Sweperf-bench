@@ -1,0 +1,55 @@
+id: pandas-dev__pandas-37064
+status:
+  human: APPROVED
+  llm: COMING_SOON
+comparison:
+  llm_better: COMING_SOON
+repo:
+  org: pandas-dev
+  name: pandas
+  url: https://github.com/pandas-dev/pandas
+  pull_request: https://github.com/pandas-dev/pandas/pull/37064
+  base_commit: 68f15fcec3a57bbd46e4132b9ded22e99802f6ed
+  created_at: '2020-10-12 0:51:38'
+  version: '1.1'
+workload:
+  language: python
+  code: "\nimport timeit\nimport statistics\n\nimport pandas as pd\nimport numpy as\
+    \ np\n\nN = 10 ** 5\nN_groupby = 100\n\narr_options = [\n    (100 * np.random.random(N)).astype(dtype)\n\
+    \    for dtype in [\"int\", \"float\"]\n]\nexpanding_groupby_options = [\n   \
+    \ pd.DataFrame({\"A\": arr[:N_groupby], \"B\": range(N_groupby)}).groupby(\"B\"\
+    ).expanding()\n    for arr in arr_options\n]\nmethods = [\"median\", \"mean\"\
+    , \"max\", \"min\", \"std\", \"count\", \"sum\"]\n\ndef workload():\n    for expanding_groupby\
+    \ in expanding_groupby_options:\n        for method in methods:\n            #\
+    \ Using timeit to measure the execution time of each method\n            getattr(expanding_groupby,\
+    \ method)()\n\nruntimes = timeit.repeat(workload, number=1, repeat=25)\n\nprint(\"\
+    Mean:\", statistics.mean(runtimes))\nprint(\"Std Dev:\", statistics.stdev(runtimes))\n"
+docker:
+  base_image: docker.io/sweperf/sweperf:pandas-dev__pandas-37064
+  human_image: docker.io/sweperf/sweperf_annotate:pandas-dev__pandas-37064
+  llm_image: PLACEHOLDER
+  commands:
+    run_base: docker run --rm --name bench_{id}_base --mount type=bind,src=<WORKLOAD_PY>,dst=/tmp/workload.py
+      {base_image} /bin/bash -lc 'python /tmp/workload.py' 2>&1
+    run_human: docker run --rm --name bench_{id}_human --mount type=bind,src=<WORKLOAD_PY>,dst=/tmp/workload.py
+      {human_image} /bin/bash -lc 'chmod +x /perf.sh && /perf.sh && python /tmp/workload.py'
+      2>&1
+    run_llm: echo 'LLM image not available yet for {id}. Please fill docker.llm_image.'
+metrics:
+  reducer: mean_std
+  parse_regex:
+    mean: (?i)\bMean:\s*([0-9.]+)
+    std: (?i)(Std Dev|SD):\s*([0-9.]+)
+notes:
+  user_notes: 'Before Mean: 0.5560135753150098
+
+    Before SD: 0.0033340211303922724
+
+    After Mean: 0.034780822910834105
+
+    After SD: 0.00045728759738019887
+
+    Improvement: -93.74%'
+  mike_notes: ''
+meta:
+  num_covering_tests: '712'

@@ -1,0 +1,55 @@
+id: pandas-dev__pandas-51921
+status:
+  human: APPROVED
+  llm: COMING_SOON
+comparison:
+  llm_better: COMING_SOON
+repo:
+  org: pandas-dev
+  name: pandas
+  url: https://github.com/pandas-dev/pandas
+  pull_request: https://github.com/pandas-dev/pandas/pull/51921
+  base_commit: 6169cba72dbe8c7e9c7f17ab38af15a256f083da
+  created_at: '2023-03-13 0:27:22'
+  version: '1.5'
+workload:
+  language: python
+  code: "import pandas as pd\nimport numpy as np\nimport timeit\nimport statistics\n\
+    \ndef setup():\n    global arr\n    N = 1_000_000\n    n_nonstr = 100_000\n  \
+    \  arr = np.empty(N, dtype=object)\n    arr[:n_nonstr] = np.arange(n_nonstr)\n\
+    \    arr[n_nonstr:] = \"abc\"\n\ndef workload():\n    global arr\n    try:\n \
+    \       pd.factorize(arr)\n    except TypeError:\n        pass\n\nruntimes = timeit.repeat(workload,\
+    \ number=1, repeat=100, setup=setup)\nprint(\"Mean:\", statistics.mean(runtimes))\n\
+    print(\"Std Dev:\", statistics.stdev(runtimes))"
+docker:
+  base_image: docker.io/sweperf/sweperf:pandas-dev__pandas-51921
+  human_image: docker.io/sweperf/sweperf_annotate:pandas-dev__pandas-51921
+  llm_image: PLACEHOLDER
+  commands:
+    run_base: docker run --rm --name bench_{id}_base --mount type=bind,src=<WORKLOAD_PY>,dst=/tmp/workload.py
+      {base_image} /bin/bash -lc 'python /tmp/workload.py' 2>&1
+    run_human: docker run --rm --name bench_{id}_human --mount type=bind,src=<WORKLOAD_PY>,dst=/tmp/workload.py
+      {human_image} /bin/bash -lc 'chmod +x /perf.sh && /perf.sh && python /tmp/workload.py'
+      2>&1
+    run_llm: echo 'LLM image not available yet for {id}. Please fill docker.llm_image.'
+metrics:
+  reducer: mean_std
+  parse_regex:
+    mean: (?i)\bMean:\s*([0-9.]+)
+    std: (?i)(Std Dev|SD):\s*([0-9.]+)
+notes:
+  user_notes: 'An error occurred:
+
+
+    An unknown error occurred. Please check the local files.'
+  mike_notes: 'Mean: 0.06612869712014799
+
+    Std Dev: 0.0015784169963907722
+
+    Mean: 0.04141965970033198
+
+    Std Dev: 0.0018163238040919609
+
+    Improvement:-37.37%'
+meta:
+  num_covering_tests: '908'

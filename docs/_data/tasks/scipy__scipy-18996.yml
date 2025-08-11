@@ -1,0 +1,52 @@
+id: scipy__scipy-18996
+status:
+  human: APPROVED
+  llm: COMING_SOON
+comparison:
+  llm_better: COMING_SOON
+repo:
+  org: scipy
+  name: scipy
+  url: https://github.com/scipy/scipy
+  pull_request: https://github.com/scipy/scipy/pull/18996
+  base_commit: 739f705bf6700c46b7b84833e80bf48b9d35114c
+  created_at: '2023-07-31 23:49:04'
+  version: '1.11'
+workload:
+  language: python
+  code: "import timeit\nimport statistics\nimport numpy as np\nfrom scipy.optimize\
+    \ import curve_fit\n\ndef setup():\n    global x, y, func\n    \n    np.random.seed(0)\n\
+    \    x = np.arange(100)\n    y = 2 * np.exp(-.1 * x) + .25 * np.random.rand(len(x))\n\
+    \    func = lambda x, a, b: a * np.exp(-b * x)\n    \ndef workload():\n    global\
+    \ x, y, func\n    _ , _ = curve_fit(func, x, y)\n\nruntimes = timeit.repeat(workload,\
+    \ number=1, repeat=20000, setup=setup)\n\nprint(\"Mean:\", statistics.mean(runtimes[-10000:]))\n\
+    print(\"Std Dev:\", statistics.stdev(runtimes[-10000:]))"
+docker:
+  base_image: docker.io/sweperf/sweperf:scipy__scipy-18996
+  human_image: docker.io/sweperf/sweperf_annotate:scipy__scipy-18996
+  llm_image: PLACEHOLDER
+  commands:
+    run_base: docker run --rm --name bench_{id}_base --mount type=bind,src=<WORKLOAD_PY>,dst=/tmp/workload.py
+      {base_image} /bin/bash -lc 'python /tmp/workload.py' 2>&1
+    run_human: docker run --rm --name bench_{id}_human --mount type=bind,src=<WORKLOAD_PY>,dst=/tmp/workload.py
+      {human_image} /bin/bash -lc 'chmod +x /perf.sh && /perf.sh && python /tmp/workload.py'
+      2>&1
+    run_llm: echo 'LLM image not available yet for {id}. Please fill docker.llm_image.'
+metrics:
+  reducer: mean_std
+  parse_regex:
+    mean: (?i)\bMean:\s*([0-9.]+)
+    std: (?i)(Std Dev|SD):\s*([0-9.]+)
+notes:
+  user_notes: 'Before Mean: 0.0003104545739159221
+
+    Before SD: 8.74724190230862e-06
+
+    After Mean: 0.00024386610340734478
+
+    After SD: 1.0470613203818106e-05
+
+    Improvement: -21.45%'
+  mike_notes: ''
+meta:
+  num_covering_tests: '1'

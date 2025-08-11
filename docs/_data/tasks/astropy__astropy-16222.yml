@@ -1,0 +1,63 @@
+id: astropy__astropy-16222
+status:
+  human: APPROVED
+  llm: COMING_SOON
+comparison:
+  llm_better: COMING_SOON
+repo:
+  org: astropy
+  name: astropy
+  url: https://github.com/astropy/astropy
+  pull_request: https://github.com/astropy/astropy/pull/16222
+  base_commit: 96cc7fbefd59e79d096802efe9f75b2f1d042487
+  created_at: '2024-03-19 22:19:41'
+  version: v5.3
+workload:
+  language: python
+  code: "import timeit\nimport statistics\nimport numpy as np\nfrom astropy.coordinates\
+    \ import SkyCoord, UnitSphericalRepresentation\nimport astropy.units as u\n\n\
+    class SkyCoordBenchmarks:\n    def setup(self):\n        self.coord_scalar = SkyCoord(1,\
+    \ 2, unit=\"deg\", frame=\"icrs\")\n        lon, lat = np.ones((2, 1000))\n  \
+    \      self.coord_array_1e3 = SkyCoord(lon, lat, unit=\"deg\", frame=\"icrs\"\
+    )\n        self.lon_1e6, self.lat_1e6 = np.ones((2, int(1e6)))\n        self.coord_array_1e6\
+    \ = SkyCoord(\n            self.lon_1e6, self.lat_1e6, unit=\"deg\", frame=\"\
+    icrs\"\n        )\n        \n        self.scalar_q_ra = 1 * u.deg\n        self.scalar_q_dec\
+    \ = 2 * u.deg\n        \n        np.random.seed(12345)\n        self.array_q_ra\
+    \ = np.random.rand(int(1e6)) * 360 * u.deg\n        self.array_q_dec = (np.random.rand(int(1e6))\
+    \ * 180 - 90) * u.deg\n        \n        self.scalar_repr = UnitSphericalRepresentation(\n\
+    \            lon=self.scalar_q_ra, lat=self.scalar_q_dec\n        )\n        self.array_repr\
+    \ = UnitSphericalRepresentation(\n            lon=self.array_q_ra, lat=self.array_q_dec\n\
+    \        )\n\n    def time_init_repr_array_noframe(self):\n        SkyCoord(self.array_repr)\n\
+    \ndef setup():\n    global bench\n    bench = SkyCoordBenchmarks()\n    bench.setup()\n\
+    \    print(\"finishone\")\n\ndef workload():\n    global bench\n    bench.time_init_repr_array_noframe()\n\
+    \nruntimes = timeit.repeat(workload, number=1, repeat=200, setup=setup)\n\nprint(\"\
+    Mean:\", statistics.mean(runtimes[-100:]))\nprint(\"Std Dev:\", statistics.stdev(runtimes[-100:]))"
+docker:
+  base_image: docker.io/sweperf/sweperf:astropy__astropy-16222
+  human_image: docker.io/sweperf/sweperf_annotate:astropy__astropy-16222
+  llm_image: PLACEHOLDER
+  commands:
+    run_base: docker run --rm --name bench_{id}_base --mount type=bind,src=<WORKLOAD_PY>,dst=/tmp/workload.py
+      {base_image} /bin/bash -lc 'python /tmp/workload.py' 2>&1
+    run_human: docker run --rm --name bench_{id}_human --mount type=bind,src=<WORKLOAD_PY>,dst=/tmp/workload.py
+      {human_image} /bin/bash -lc 'chmod +x /perf.sh && /perf.sh && python /tmp/workload.py'
+      2>&1
+    run_llm: echo 'LLM image not available yet for {id}. Please fill docker.llm_image.'
+metrics:
+  reducer: mean_std
+  parse_regex:
+    mean: (?i)\bMean:\s*([0-9.]+)
+    std: (?i)(Std Dev|SD):\s*([0-9.]+)
+notes:
+  user_notes: 'Before Mean: 0.03463494285766501
+
+    Before SD: 0.00045883767021412825
+
+    After Mean: 0.012496425629942678
+
+    After SD: 0.0003645408977370976
+
+    Improvement: -63.92%'
+  mike_notes: ''
+meta:
+  num_covering_tests: '49'

@@ -1,0 +1,50 @@
+id: sympy__sympy-11675
+status:
+  human: APPROVED
+  llm: COMING_SOON
+comparison:
+  llm_better: COMING_SOON
+repo:
+  org: sympy
+  name: sympy
+  url: https://github.com/sympy/sympy
+  pull_request: https://github.com/sympy/sympy/pull/11675
+  base_commit: f02a6e98925cdd9c24383aba092847060fa63120
+  created_at: '2016-09-28 13:26:13'
+  version: '1'
+workload:
+  language: python
+  code: "import timeit\nimport statistics\nfrom sympy.solvers.diophantine import diop_DN\n\
+    \ndef setup():\n    global D, N\n    D = 15591784605\n    N = -20\n\ndef workload():\n\
+    \    global n\n    _ = sorted(diop_DN(D, N))\n\nruntimes = timeit.repeat(workload,\
+    \ number=1, repeat=5, setup=setup)\n\nprint(\"Mean:\", statistics.mean(runtimes))\n\
+    print(\"Std Dev:\", statistics.stdev(runtimes))"
+docker:
+  base_image: docker.io/sweperf/sweperf:sympy__sympy-11675
+  human_image: docker.io/sweperf/sweperf_annotate:sympy__sympy-11675
+  llm_image: PLACEHOLDER
+  commands:
+    run_base: docker run --rm --name bench_{id}_base --mount type=bind,src=<WORKLOAD_PY>,dst=/tmp/workload.py
+      {base_image} /bin/bash -lc 'python /tmp/workload.py' 2>&1
+    run_human: docker run --rm --name bench_{id}_human --mount type=bind,src=<WORKLOAD_PY>,dst=/tmp/workload.py
+      {human_image} /bin/bash -lc 'chmod +x /perf.sh && /perf.sh && python /tmp/workload.py'
+      2>&1
+    run_llm: echo 'LLM image not available yet for {id}. Please fill docker.llm_image.'
+metrics:
+  reducer: mean_std
+  parse_regex:
+    mean: (?i)\bMean:\s*([0-9.]+)
+    std: (?i)(Std Dev|SD):\s*([0-9.]+)
+notes:
+  user_notes: 'Before Mean: 41.29017873097909
+
+    Before SD: 0.17414525268575992
+
+    After Mean: 0.051071269181557
+
+    After SD: 0.09666295816718806
+
+    Improvement: -99.88%'
+  mike_notes: ''
+meta:
+  num_covering_tests: '1'

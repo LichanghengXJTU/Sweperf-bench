@@ -1,0 +1,61 @@
+id: sympy__sympy-24884
+status:
+  human: APPROVED
+  llm: COMING_SOON
+comparison:
+  llm_better: COMING_SOON
+repo:
+  org: sympy
+  name: sympy
+  url: https://github.com/sympy/sympy
+  pull_request: https://github.com/sympy/sympy/pull/24884
+  base_commit: ee255925dca1ac582644b8c88ebfcf89ef9bcf1f
+  created_at: '2023-03-09 17:26:34'
+  version: '1.13'
+workload:
+  language: python
+  code: "import timeit\nimport statistics\n\n\nfrom sympy.core.cache import clear_cache\n\
+    from sympy.matrices import randMatrix\nfrom sympy.polys.matrices.ddm import DDM\n\
+    from sympy.core.backend import symbols\n\ndef mu(X):\n    n = X.shape[0]\n   \
+    \ zero = X.domain.zero\n\n    total = zero\n    diag_sums = [zero]\n    for i\
+    \ in reversed(range(1, n)):\n        total -= X[i][i]\n        diag_sums.append(total)\n\
+    \    diag_sums = diag_sums[::-1]\n\n    elems = [[zero]*i + [diag_sums[i]] + X_i[i+1:]\
+    \ for i, X_i in enumerate(X)]\n\n    return DDM(elems, X.shape, X.domain)\n\n\
+    def make_F_A(A):\n    return lambda X: mu(X).matmul(A)\n\ndef det_div_free(A):\n\
+    \    Addm = A._rep.to_dense().rep\n\n    n = Addm.shape[0]\n    F_A = make_F_A(Addm)\n\
+    \n    Fn1 = Addm\n    for _ in range(n-1):\n        Fn1 = F_A(Fn1)\n\n    detA\
+    \ = Fn1[0][0]\n    if n % 2 == 0:\n        detA = -detA\n\n    return Addm.domain.to_sympy(detA)\n\
+    \ndef setup():\n    global M\n    clear_cache()\n    x, y = symbols('x y')\n \
+    \   M = randMatrix(5)*x + randMatrix(5)*y\n\ndef workload():\n    global M\n \
+    \   ok = det_div_free(M)\n\nruntimes = timeit.repeat(workload, number=1, repeat=25,\
+    \ setup=setup)\n\nprint(\"Mean:\", statistics.mean(runtimes))\nprint(\"Std Dev:\"\
+    , statistics.stdev(runtimes))\n"
+docker:
+  base_image: docker.io/sweperf/sweperf:sympy__sympy-24884
+  human_image: docker.io/sweperf/sweperf_annotate:sympy__sympy-24884
+  llm_image: PLACEHOLDER
+  commands:
+    run_base: docker run --rm --name bench_{id}_base --mount type=bind,src=<WORKLOAD_PY>,dst=/tmp/workload.py
+      {base_image} /bin/bash -lc 'python /tmp/workload.py' 2>&1
+    run_human: docker run --rm --name bench_{id}_human --mount type=bind,src=<WORKLOAD_PY>,dst=/tmp/workload.py
+      {human_image} /bin/bash -lc 'chmod +x /perf.sh && /perf.sh && python /tmp/workload.py'
+      2>&1
+    run_llm: echo 'LLM image not available yet for {id}. Please fill docker.llm_image.'
+metrics:
+  reducer: mean_std
+  parse_regex:
+    mean: (?i)\bMean:\s*([0-9.]+)
+    std: (?i)(Std Dev|SD):\s*([0-9.]+)
+notes:
+  user_notes: 'Before Mean: 0.12971689976518974
+
+    Before SD: 0.0018767189480579304
+
+    After Mean: 0.04890170995611697
+
+    After SD: 0.0013475409669029556
+
+    Improvement: -62.30%'
+  mike_notes: ''
+meta:
+  num_covering_tests: '40'

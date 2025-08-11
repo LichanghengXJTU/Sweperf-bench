@@ -1,0 +1,53 @@
+id: matplotlib__matplotlib-15346
+status:
+  human: APPROVED
+  llm: COMING_SOON
+comparison:
+  llm_better: COMING_SOON
+repo:
+  org: matplotlib
+  name: matplotlib
+  url: https://github.com/matplotlib/matplotlib
+  pull_request: https://github.com/matplotlib/matplotlib/pull/15346
+  base_commit: ba7a162c01efbccce7432b5936bd5cc5b72b810c
+  created_at: '2019-09-29 17:11:19'
+  version: '3.1'
+workload:
+  language: python
+  code: "import timeit\nimport statistics\n\nimport matplotlib.pyplot as plt\nfrom\
+    \ mpl_toolkits.mplot3d import Axes3D\n\nimport numpy as np\n\nn = 50\n\ndef setup():\n\
+    \    global fig, ax, X, Y, Z, U, V, W\n    fig = plt.figure()\n    ax = fig.gca(projection='3d')\n\
+    \    x, y, z = [np.random.rand(n) for _ in range(3)]\n    X, Y, Z = np.meshgrid(x,\
+    \ y, z)\n    U, V, W = [np.random.rand(*X.shape) for _ in range(3)]\n\ndef workload():\n\
+    \    global fig, ax, X, Y, Z, U, V, W\n    ax.quiver(X, Y, Z, U, V, W)\n\nruntimes\
+    \ = timeit.repeat(workload, number=1, repeat=25, setup=setup)\n\nprint(\"Mean:\"\
+    , statistics.mean(runtimes))\nprint(\"Std Dev:\", statistics.stdev(runtimes))"
+docker:
+  base_image: docker.io/sweperf/sweperf:matplotlib__matplotlib-15346
+  human_image: docker.io/sweperf/sweperf_annotate:matplotlib__matplotlib-15346
+  llm_image: PLACEHOLDER
+  commands:
+    run_base: docker run --rm --name bench_{id}_base --mount type=bind,src=<WORKLOAD_PY>,dst=/tmp/workload.py
+      {base_image} /bin/bash -lc 'python /tmp/workload.py' 2>&1
+    run_human: docker run --rm --name bench_{id}_human --mount type=bind,src=<WORKLOAD_PY>,dst=/tmp/workload.py
+      {human_image} /bin/bash -lc 'chmod +x /perf.sh && /perf.sh && python /tmp/workload.py'
+      2>&1
+    run_llm: echo 'LLM image not available yet for {id}. Please fill docker.llm_image.'
+metrics:
+  reducer: mean_std
+  parse_regex:
+    mean: (?i)\bMean:\s*([0-9.]+)
+    std: (?i)(Std Dev|SD):\s*([0-9.]+)
+notes:
+  user_notes: 'Before Mean: 2.5714919534372167
+
+    Before SD: 0.015637649916851792
+
+    After Mean: 0.251614837073721
+
+    After SD: 0.22048500236765922
+
+    Improvement: -90.22%'
+  mike_notes: ''
+meta:
+  num_covering_tests: '1'

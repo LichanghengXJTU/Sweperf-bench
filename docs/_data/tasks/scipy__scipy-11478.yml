@@ -1,0 +1,55 @@
+id: scipy__scipy-11478
+status:
+  human: APPROVED
+  llm: COMING_SOON
+comparison:
+  llm_better: COMING_SOON
+repo:
+  org: scipy
+  name: scipy
+  url: https://github.com/scipy/scipy
+  pull_request: https://github.com/scipy/scipy/pull/11478
+  base_commit: 1bee17531da6cc2c9b49785bf4f9359e5d74b645
+  created_at: '2020-02-06 20:56:12'
+  version: '1.4'
+workload:
+  language: python
+  code: "import timeit\nimport statistics\nimport numpy as np\nimport scipy.sparse\
+    \ as sp\nimport math\nimport gc\n\ndef setup():\n    global A, B\n\n    int32max\
+    \ = np.iinfo(np.int32).max\n    limit_size = int(math.sqrt(int32max))\n    density\
+    \ = 0.000000000000001\n    gc.collect()\n    N = limit_size\n    data = np.array([np.arange(1,\
+    \ N+1)]).repeat(500, axis=0)\n    offsets = np.arange(0, 500)\n    A = sp.dia_matrix((data,\
+    \ offsets), shape=(N, N), dtype=np.int64).tocsr()\n    B = sp.csr_matrix((N, N),\
+    \ dtype=np.int64)\n    data = None\n    offsets = None\n    gc.collect()\n\n \
+    \   \ndef workload():\n    global A, B\n    A * B\n\nruntimes = timeit.repeat(workload,\
+    \ number=1, repeat=40, setup=setup)\n\nprint(\"Mean:\", statistics.mean(runtimes[-20:]))\n\
+    print(\"Std Dev:\", statistics.stdev(runtimes[-20:]))"
+docker:
+  base_image: docker.io/sweperf/sweperf:scipy__scipy-11478
+  human_image: docker.io/sweperf/sweperf_annotate:scipy__scipy-11478
+  llm_image: PLACEHOLDER
+  commands:
+    run_base: docker run --rm --name bench_{id}_base --mount type=bind,src=<WORKLOAD_PY>,dst=/tmp/workload.py
+      {base_image} /bin/bash -lc 'python /tmp/workload.py' 2>&1
+    run_human: docker run --rm --name bench_{id}_human --mount type=bind,src=<WORKLOAD_PY>,dst=/tmp/workload.py
+      {human_image} /bin/bash -lc 'chmod +x /perf.sh && /perf.sh && python /tmp/workload.py'
+      2>&1
+    run_llm: echo 'LLM image not available yet for {id}. Please fill docker.llm_image.'
+metrics:
+  reducer: mean_std
+  parse_regex:
+    mean: (?i)\bMean:\s*([0-9.]+)
+    std: (?i)(Std Dev|SD):\s*([0-9.]+)
+notes:
+  user_notes: 'Before Mean: 0.06035097290005069
+
+    Before SD: 0.0021535533472914767
+
+    After Mean: 0.044701248398632744
+
+    After SD: 0.0002054733434569213
+
+    Improvement: -25.93%'
+  mike_notes: ''
+meta:
+  num_covering_tests: '1'

@@ -1,0 +1,50 @@
+id: matplotlib__matplotlib-19760
+status:
+  human: APPROVED
+  llm: COMING_SOON
+comparison:
+  llm_better: COMING_SOON
+repo:
+  org: matplotlib
+  name: matplotlib
+  url: https://github.com/matplotlib/matplotlib
+  pull_request: https://github.com/matplotlib/matplotlib/pull/19760
+  base_commit: bfa31a482d6baa9a6da417bc1c20d4cd93abcece
+  created_at: '2021-03-23 12:49:23'
+  version: '3.3'
+workload:
+  language: python
+  code: "import timeit\nimport statistics\n\nfrom pylab import *\nmpl.use(\"agg\"\
+    )\n\nfrom matplotlib.figure import Figure\n\ndef workload():\n    Figure().subplots(20,\
+    \ 20)\n\nruntimes = timeit.repeat(workload, number=1, repeat=25)\n\n# Print runtime\
+    \ mean and std deviation.\nprint(\"Mean:\", statistics.mean(runtimes))\nprint(\"\
+    Std Dev:\", statistics.stdev(runtimes))\n"
+docker:
+  base_image: docker.io/sweperf/sweperf:matplotlib__matplotlib-19760
+  human_image: docker.io/sweperf/sweperf_annotate:matplotlib__matplotlib-19760
+  llm_image: PLACEHOLDER
+  commands:
+    run_base: docker run --rm --name bench_{id}_base --mount type=bind,src=<WORKLOAD_PY>,dst=/tmp/workload.py
+      {base_image} /bin/bash -lc 'python /tmp/workload.py' 2>&1
+    run_human: docker run --rm --name bench_{id}_human --mount type=bind,src=<WORKLOAD_PY>,dst=/tmp/workload.py
+      {human_image} /bin/bash -lc 'chmod +x /perf.sh && /perf.sh && python /tmp/workload.py'
+      2>&1
+    run_llm: echo 'LLM image not available yet for {id}. Please fill docker.llm_image.'
+metrics:
+  reducer: mean_std
+  parse_regex:
+    mean: (?i)\bMean:\s*([0-9.]+)
+    std: (?i)(Std Dev|SD):\s*([0-9.]+)
+notes:
+  user_notes: 'Before Mean: 3.617303566564806
+
+    Before SD: 0.021788782809291418
+
+    After Mean: 2.7787992560025305
+
+    After SD: 0.013082689009474664
+
+    Improvement: -23.18%'
+  mike_notes: ''
+meta:
+  num_covering_tests: '93'

@@ -1,0 +1,51 @@
+id: astropy__astropy-12701
+status:
+  human: APPROVED
+  llm: COMING_SOON
+comparison:
+  llm_better: COMING_SOON
+repo:
+  org: astropy
+  name: astropy
+  url: https://github.com/astropy/astropy
+  pull_request: https://github.com/astropy/astropy/pull/12701
+  base_commit: dd5b594334c43ff504e035d94f3e5ed017ff1d14
+  created_at: '2022-01-09 18:33:11'
+  version: '4.3'
+workload:
+  language: python
+  code: "import timeit\nimport statistics\nfrom astropy.time import Time, TimeDelta\n\
+    import astropy.units as u\nimport numpy as np\n\ndef setup():\n    global t0,\
+    \ t1, dt\n    dt = TimeDelta(1 * u.hour)\n    t0 = Time('2021-01-01')\n    t1\
+    \ = Time('2022-01-01')\n    \ndef workload():\n    global t0, t1, dt\n    Time(np.arange(t0,\
+    \ t1, dt))\n\nruntimes = timeit.repeat(workload, number=1, repeat=20, setup=setup)\n\
+    \nprint(\"Mean:\", statistics.mean(runtimes[-10:]))\nprint(\"Std Dev:\", statistics.stdev(runtimes[-10:]))"
+docker:
+  base_image: docker.io/sweperf/sweperf:astropy__astropy-12701
+  human_image: docker.io/sweperf/sweperf_annotate:astropy__astropy-12701
+  llm_image: PLACEHOLDER
+  commands:
+    run_base: docker run --rm --name bench_{id}_base --mount type=bind,src=<WORKLOAD_PY>,dst=/tmp/workload.py
+      {base_image} /bin/bash -lc 'python /tmp/workload.py' 2>&1
+    run_human: docker run --rm --name bench_{id}_human --mount type=bind,src=<WORKLOAD_PY>,dst=/tmp/workload.py
+      {human_image} /bin/bash -lc 'chmod +x /perf.sh && /perf.sh && python /tmp/workload.py'
+      2>&1
+    run_llm: echo 'LLM image not available yet for {id}. Please fill docker.llm_image.'
+metrics:
+  reducer: mean_std
+  parse_regex:
+    mean: (?i)\bMean:\s*([0-9.]+)
+    std: (?i)(Std Dev|SD):\s*([0-9.]+)
+notes:
+  user_notes: 'Before Mean: 0.9766846747952513
+
+    Before SD: 0.00554909211630871
+
+    After Mean: 0.8277796211943496
+
+    After SD: 0.004935394021512362
+
+    Improvement: -15.25%'
+  mike_notes: ''
+meta:
+  num_covering_tests: '21'

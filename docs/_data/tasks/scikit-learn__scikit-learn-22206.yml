@@ -1,0 +1,51 @@
+id: scikit-learn__scikit-learn-22206
+status:
+  human: APPROVED
+  llm: COMING_SOON
+comparison:
+  llm_better: COMING_SOON
+repo:
+  org: scikit-learn
+  name: scikit-learn
+  url: https://github.com/scikit-learn/scikit-learn
+  pull_request: https://github.com/scikit-learn/scikit-learn/pull/22206
+  base_commit: 8d6217107f02d6f52d2f8c8908958fe82778c7cc
+  created_at: '2022-01-13 22:34:42'
+  version: '1.1'
+workload:
+  language: python
+  code: "import timeit\nimport statistics\n\nfrom sklearn.datasets import make_regression\n\
+    from sklearn.linear_model import QuantileRegressor\n\nX, y = make_regression(n_samples=10_000,\
+    \ n_features=50, random_state=0, noise=1.0)\n\ndef workload():\n    QuantileRegressor(solver=\"\
+    highs\").fit(X, y)\n    \n# Run benchmark\nruntimes = timeit.repeat(workload,\
+    \ number=1, repeat=10)\n\n# Output results\nprint(\"Mean:\", statistics.mean(runtimes))\n\
+    print(\"Std Dev:\", statistics.stdev(runtimes))\n"
+docker:
+  base_image: docker.io/sweperf/sweperf:scikit-learn__scikit-learn-22206
+  human_image: docker.io/sweperf/sweperf_annotate:scikit-learn__scikit-learn-22206
+  llm_image: PLACEHOLDER
+  commands:
+    run_base: docker run --rm --name bench_{id}_base --mount type=bind,src=<WORKLOAD_PY>,dst=/tmp/workload.py
+      {base_image} /bin/bash -lc 'python /tmp/workload.py' 2>&1
+    run_human: docker run --rm --name bench_{id}_human --mount type=bind,src=<WORKLOAD_PY>,dst=/tmp/workload.py
+      {human_image} /bin/bash -lc 'chmod +x /perf.sh && /perf.sh && python /tmp/workload.py'
+      2>&1
+    run_llm: echo 'LLM image not available yet for {id}. Please fill docker.llm_image.'
+metrics:
+  reducer: mean_std
+  parse_regex:
+    mean: (?i)\bMean:\s*([0-9.]+)
+    std: (?i)(Std Dev|SD):\s*([0-9.]+)
+notes:
+  user_notes: 'Before Mean: 5.057025083492045
+
+    Before SD: 0.01887978722295244
+
+    After Mean: 2.445835139893461
+
+    After SD: 0.017414498836669113
+
+    Improvement: -51.63%'
+  mike_notes: ''
+meta:
+  num_covering_tests: '28'

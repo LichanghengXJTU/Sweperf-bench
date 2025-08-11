@@ -1,0 +1,52 @@
+id: pandas-dev__pandas-58992
+status:
+  human: APPROVED
+  llm: COMING_SOON
+comparison:
+  llm_better: COMING_SOON
+repo:
+  org: pandas-dev
+  name: pandas
+  url: https://github.com/pandas-dev/pandas
+  pull_request: https://github.com/pandas-dev/pandas/pull/58992
+  base_commit: de5d7323cf6fcdd6fcb1643a11c248440787d960
+  created_at: '2024-06-12 22:48:43'
+  version: '2.2'
+workload:
+  language: python
+  code: "import timeit\nimport statistics\n\nimport pandas as pd\nimport matplotlib.pyplot\
+    \ as plt\n\nts_index = pd.date_range('2020-01-01 00:00', periods=500_000, freq='10min')\n\
+    \ns_a = pd.Series(data=1, index=ts_index)\ns_b = pd.Series(data=2, index=ts_index)\n\
+    \ndef setup():\n    global ax\n    plt.clf()\n    fig, ax = plt.subplots()\n \
+    \   \ndef workload():\n    global ax\n    s_a.plot(ax=ax)\n    \nruntimes = timeit.repeat(workload,\
+    \ number=1, repeat=6, setup=setup)[-5:]\n\n# Print runtime mean and std deviation.\n\
+    print(\"Mean:\", statistics.mean(runtimes))\nprint(\"Std Dev:\", statistics.stdev(runtimes))\n"
+docker:
+  base_image: docker.io/sweperf/sweperf:pandas-dev__pandas-58992
+  human_image: docker.io/sweperf/sweperf_annotate:pandas-dev__pandas-58992
+  llm_image: PLACEHOLDER
+  commands:
+    run_base: docker run --rm --name bench_{id}_base --mount type=bind,src=<WORKLOAD_PY>,dst=/tmp/workload.py
+      {base_image} /bin/bash -lc 'python /tmp/workload.py' 2>&1
+    run_human: docker run --rm --name bench_{id}_human --mount type=bind,src=<WORKLOAD_PY>,dst=/tmp/workload.py
+      {human_image} /bin/bash -lc 'chmod +x /perf.sh && /perf.sh && python /tmp/workload.py'
+      2>&1
+    run_llm: echo 'LLM image not available yet for {id}. Please fill docker.llm_image.'
+metrics:
+  reducer: mean_std
+  parse_regex:
+    mean: (?i)\bMean:\s*([0-9.]+)
+    std: (?i)(Std Dev|SD):\s*([0-9.]+)
+notes:
+  user_notes: 'Before Mean: 13.843341277202125
+
+    Before SD: 0.01912511770688179
+
+    After Mean: 1.0124845795915463
+
+    After SD: 0.006712374689262484
+
+    Improvement: -92.69%'
+  mike_notes: ''
+meta:
+  num_covering_tests: '16'

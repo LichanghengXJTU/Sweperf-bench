@@ -1,0 +1,52 @@
+id: astropy__astropy-13899
+status:
+  human: APPROVED
+  llm: COMING_SOON
+comparison:
+  llm_better: COMING_SOON
+repo:
+  org: astropy
+  name: astropy
+  url: https://github.com/astropy/astropy
+  pull_request: https://github.com/astropy/astropy/pull/13899
+  base_commit: e262c71045449433040980555074d0941dd6230f
+  created_at: '2022-10-25 23:17:37'
+  version: '5.1'
+workload:
+  language: python
+  code: "import timeit\nimport statistics\nimport astropy.io.fits\nimport numpy as\
+    \ np\nfrom astropy.visualization.interval import ManualInterval\n\nnp.random.seed(0)\n\
+    \ndef setup():\n    global interval, data\n    \n    interval = ManualInterval(vmin=0.1,\
+    \ vmax=0.9)\n    data = np.random.uniform(0, 1, size=10000)\n    \ndef workload():\n\
+    \    global interval, data\n    interval.get_limits(data)\n\nruntimes = timeit.repeat(workload,\
+    \ number=10, repeat=20000, setup=setup)\n\nprint(\"Mean:\", statistics.mean(runtimes[-10000:]))\n\
+    print(\"Std Dev:\", statistics.stdev(runtimes[-10000:]))"
+docker:
+  base_image: docker.io/sweperf/sweperf:astropy__astropy-13899
+  human_image: docker.io/sweperf/sweperf_annotate:astropy__astropy-13899
+  llm_image: PLACEHOLDER
+  commands:
+    run_base: docker run --rm --name bench_{id}_base --mount type=bind,src=<WORKLOAD_PY>,dst=/tmp/workload.py
+      {base_image} /bin/bash -lc 'python /tmp/workload.py' 2>&1
+    run_human: docker run --rm --name bench_{id}_human --mount type=bind,src=<WORKLOAD_PY>,dst=/tmp/workload.py
+      {human_image} /bin/bash -lc 'chmod +x /perf.sh && /perf.sh && python /tmp/workload.py'
+      2>&1
+    run_llm: echo 'LLM image not available yet for {id}. Please fill docker.llm_image.'
+metrics:
+  reducer: mean_std
+  parse_regex:
+    mean: (?i)\bMean:\s*([0-9.]+)
+    std: (?i)(Std Dev|SD):\s*([0-9.]+)
+notes:
+  user_notes: 'Before Mean: 9.082150810863823e-05
+
+    Before SD: 2.7540190624031772e-06
+
+    After Mean: 1.9214993459172547e-06
+
+    After SD: 2.377328138641357e-07
+
+    Improvement: -97.88%'
+  mike_notes: ''
+meta:
+  num_covering_tests: '8'

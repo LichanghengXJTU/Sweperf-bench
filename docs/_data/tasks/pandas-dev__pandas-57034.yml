@@ -1,0 +1,52 @@
+id: pandas-dev__pandas-57034
+status:
+  human: APPROVED
+  llm: COMING_SOON
+comparison:
+  llm_better: COMING_SOON
+repo:
+  org: pandas-dev
+  name: pandas
+  url: https://github.com/pandas-dev/pandas
+  pull_request: https://github.com/pandas-dev/pandas/pull/57034
+  base_commit: 736868671044605b0f2c2cc23ab5ea09fbc9a2ac
+  created_at: '2024-01-23 11:30:18'
+  version: '2.2'
+workload:
+  language: python
+  code: "import timeit\nimport statistics\n\nimport pandas as pd\nimport numpy as\
+    \ np\n\nN = 1_000_000\n\ns1 = pd.Series(np.random.randn(N))\ns1 = s1[::2].sample(frac=1.0)\n\
+    s2 = pd.Series(np.random.randn(N))\n\n# same index\ns3 = pd.Series(np.random.randn(N))\n\
+    s3[::2] = np.nan\ns4 = pd.Series(np.random.randn(N))\n\ndef workload():\n    s1.combine_first(s2)\n\
+    \    s3.combine_first(s4)\n    \nruntimes = timeit.repeat(workload, number=5,\
+    \ repeat=25)\n\n# Print runtime mean and std deviation.\nprint(\"Mean:\", statistics.mean(runtimes))\n\
+    print(\"Std Dev:\", statistics.stdev(runtimes))\n"
+docker:
+  base_image: docker.io/sweperf/sweperf:pandas-dev__pandas-57034
+  human_image: docker.io/sweperf/sweperf_annotate:pandas-dev__pandas-57034
+  llm_image: PLACEHOLDER
+  commands:
+    run_base: docker run --rm --name bench_{id}_base --mount type=bind,src=<WORKLOAD_PY>,dst=/tmp/workload.py
+      {base_image} /bin/bash -lc 'python /tmp/workload.py' 2>&1
+    run_human: docker run --rm --name bench_{id}_human --mount type=bind,src=<WORKLOAD_PY>,dst=/tmp/workload.py
+      {human_image} /bin/bash -lc 'chmod +x /perf.sh && /perf.sh && python /tmp/workload.py'
+      2>&1
+    run_llm: echo 'LLM image not available yet for {id}. Please fill docker.llm_image.'
+metrics:
+  reducer: mean_std
+  parse_regex:
+    mean: (?i)\bMean:\s*([0-9.]+)
+    std: (?i)(Std Dev|SD):\s*([0-9.]+)
+notes:
+  user_notes: 'Before Mean: 1.92316575816134
+
+    Before SD: 0.08430291563913812
+
+    After Mean: 0.41349546388024466
+
+    After SD: 0.007851134217690287
+
+    Improvement: -78.50%'
+  mike_notes: ''
+meta:
+  num_covering_tests: '13'

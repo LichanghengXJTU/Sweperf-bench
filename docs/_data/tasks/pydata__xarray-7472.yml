@@ -1,0 +1,54 @@
+id: pydata__xarray-7472
+status:
+  human: APPROVED
+  llm: COMING_SOON
+comparison:
+  llm_better: COMING_SOON
+repo:
+  org: pydata
+  name: xarray
+  url: https://github.com/pydata/xarray
+  pull_request: https://github.com/pydata/xarray/pull/7472
+  base_commit: 3ee7b5a63bb65ce62eff3dafe4a2e90bca7a9eeb
+  created_at: '2023-01-24 0:15:01'
+  version: '2022.09'
+workload:
+  language: python
+  code: "import timeit\nimport statistics\n\nimport xarray as xr\nimport dask.array\
+    \ as da\nimport numpy as np\n\nrandom_kws = dict(chunks=5000)\n\ndim1 = 10_000\n\
+    dim2 = 10_000\n\ndef setup():\n    global ds\n    ds = xr.Dataset(\n        {\n\
+    \            \"x\": xr.DataArray(\n                data=da.random.random((dim1,\
+    \ dim2), **random_kws),\n                dims=[\"dim1\", \"dim2\"],\n        \
+    \        coords={\"dim1\": np.arange(0, dim1), \"dim2\": np.arange(0, dim2)},\n\
+    \            )\n        }\n    )\n\ndef workload():\n    global ds\n    ds.to_dask_dataframe()\n\
+    \    \nruntimes = timeit.repeat(workload, number=1, repeat=20, setup = setup)\n\
+    \nprint(\"Mean:\", statistics.mean(runtimes))\nprint(\"Std Dev:\", statistics.stdev(runtimes))\n"
+docker:
+  base_image: docker.io/sweperf/sweperf:pydata__xarray-7472
+  human_image: docker.io/sweperf/sweperf_annotate:pydata__xarray-7472
+  llm_image: PLACEHOLDER
+  commands:
+    run_base: docker run --rm --name bench_{id}_base --mount type=bind,src=<WORKLOAD_PY>,dst=/tmp/workload.py
+      {base_image} /bin/bash -lc 'python /tmp/workload.py' 2>&1
+    run_human: docker run --rm --name bench_{id}_human --mount type=bind,src=<WORKLOAD_PY>,dst=/tmp/workload.py
+      {human_image} /bin/bash -lc 'chmod +x /perf.sh && /perf.sh && python /tmp/workload.py'
+      2>&1
+    run_llm: echo 'LLM image not available yet for {id}. Please fill docker.llm_image.'
+metrics:
+  reducer: mean_std
+  parse_regex:
+    mean: (?i)\bMean:\s*([0-9.]+)
+    std: (?i)(Std Dev|SD):\s*([0-9.]+)
+notes:
+  user_notes: 'Before Mean: 0.4544732673530234
+
+    Before SD: 0.015778495599279237
+
+    After Mean: 0.009711345698451623
+
+    After SD: 0.013851903508596993
+
+    Improvement: -97.86%'
+  mike_notes: ''
+meta:
+  num_covering_tests: '1'

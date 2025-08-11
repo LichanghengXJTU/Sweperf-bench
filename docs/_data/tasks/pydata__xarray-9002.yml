@@ -1,0 +1,73 @@
+id: pydata__xarray-9002
+status:
+  human: APPROVED
+  llm: COMING_SOON
+comparison:
+  llm_better: COMING_SOON
+repo:
+  org: pydata
+  name: xarray
+  url: https://github.com/pydata/xarray
+  pull_request: https://github.com/pydata/xarray/pull/9002
+  base_commit: 938c8b6aa95a32568063f5e7cf005f8b478c3f61
+  created_at: '2024-05-05 16:05:11'
+  version: '2023.07'
+workload:
+  language: python
+  code: "import timeit\nimport statistics\n\nimport xarray as xr\nimport numpy as\
+    \ np\nimport pandas as pd\n\nnx = 2000\nny = 1000\nnt = 500\n\ndef randn(shape,\
+    \ frac_nan=None, chunks=None, seed=0):\n    rng = np.random.default_rng(seed)\n\
+    \    if chunks is None:\n        x = rng.standard_normal(shape)\n    else:\n \
+    \       import dask.array as da\n\n        rng = da.random.default_rng(seed)\n\
+    \        x = rng.standard_normal(shape, chunks=chunks)\n\n    if frac_nan is not\
+    \ None:\n        inds = rng.choice(range(x.size), int(x.size * frac_nan))\n  \
+    \      x.flat[inds] = np.nan\n\n    return x\n\ndef randint(low, high=None, size=None,\
+    \ frac_minus=None, seed=0):\n    rng = np.random.RandomState(seed)\n    x = rng.randint(low,\
+    \ high, size)\n    if frac_minus is not None:\n        inds = rng.choice(range(x.size),\
+    \ int(x.size * frac_minus))\n        x.flat[inds] = -1\n\n    return x\n\nds =\
+    \ xr.Dataset(\n        {\n            \"var1\": ((\"x\", \"y\"), randn((nx, ny),\
+    \ frac_nan=0.1)),\n            \"var2\": ((\"x\", \"t\"), randn((nx, nt))),\n\
+    \            \"var3\": ((\"t\",), randn(nt)),\n        },\n        coords={\n\
+    \            \"x\": np.arange(nx),\n            \"y\": np.linspace(0, 1, ny),\n\
+    \            \"t\": pd.date_range(\"1970-01-01\", periods=nt, freq=\"D\"),\n \
+    \           \"x_coords\": (\"x\", np.linspace(1.1, 2.1, nx)),\n        },\n  \
+    \  )\n\nbasic_indexes = {\n    \"1scalar\": {\"x\": 0},\n    \"1slice\": {\"x\"\
+    : slice(0, 3)},\n    \"1slice-1scalar\": {\"x\": 0, \"y\": slice(None, None, 3)},\n\
+    \    \"2slicess-1scalar\": {\"x\": slice(3, -3, 3), \"y\": 1, \"t\": slice(None,\
+    \ -3, 3)},\n}\n\nouter_indexes = {\n    \"1d\": {\"x\": randint(0, nx, 400)},\n\
+    \    \"2d\": {\"x\": randint(0, nx, 500), \"y\": randint(0, ny, 400)},\n    \"\
+    2d-1scalar\": {\"x\": randint(0, nx, 100), \"y\": 1, \"t\": randint(0, nt, 400)},\n\
+    }\n\ndef workload():\n    for key in basic_indexes:\n        ds.isel(**basic_indexes[key]).load()\n\
+    \    \n    for key in outer_indexes:\n        ds.isel(**outer_indexes[key]).load()\n\
+    \n\nruntimes = timeit.repeat(workload, number=5, repeat=100)\n\n# Print runtime\
+    \ mean and std deviation.\nprint(\"Mean:\", statistics.mean(runtimes))\nprint(\"\
+    Std Dev:\", statistics.stdev(runtimes))"
+docker:
+  base_image: docker.io/sweperf/sweperf:pydata__xarray-9002
+  human_image: docker.io/sweperf/sweperf_annotate:pydata__xarray-9002
+  llm_image: PLACEHOLDER
+  commands:
+    run_base: docker run --rm --name bench_{id}_base --mount type=bind,src=<WORKLOAD_PY>,dst=/tmp/workload.py
+      {base_image} /bin/bash -lc 'python /tmp/workload.py' 2>&1
+    run_human: docker run --rm --name bench_{id}_human --mount type=bind,src=<WORKLOAD_PY>,dst=/tmp/workload.py
+      {human_image} /bin/bash -lc 'chmod +x /perf.sh && /perf.sh && python /tmp/workload.py'
+      2>&1
+    run_llm: echo 'LLM image not available yet for {id}. Please fill docker.llm_image.'
+metrics:
+  reducer: mean_std
+  parse_regex:
+    mean: (?i)\bMean:\s*([0-9.]+)
+    std: (?i)(Std Dev|SD):\s*([0-9.]+)
+notes:
+  user_notes: 'Before Mean: 0.015181063458439894
+
+    Before SD: 0.006030520518816813
+
+    After Mean: 0.014177881982177495
+
+    After SD: 0.006016377281333171
+
+    Improvement: -6.61%'
+  mike_notes: ''
+meta:
+  num_covering_tests: '66'

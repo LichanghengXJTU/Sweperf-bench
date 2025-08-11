@@ -1,0 +1,179 @@
+id: sympy__sympy-20989
+status:
+  human: APPROVED
+  llm: COMING_SOON
+comparison:
+  llm_better: COMING_SOON
+repo:
+  org: sympy
+  name: sympy
+  url: https://github.com/sympy/sympy
+  pull_request: https://github.com/sympy/sympy/pull/20989
+  base_commit: 3572b1955d089e94d5af5b388b557fc26719ee1b
+  created_at: '2021-02-21 21:05:28'
+  version: '1.8'
+workload:
+  language: python
+  code: "import timeit\nimport statistics\nfrom sympy import *\nfrom sympy.core.cache\
+    \ import clear_cache\n\ndef setup():\n    global t\n    clear_cache()\n    t =\
+    \ Symbol('t')\n\ndef workload():\n    global t\n    _ = integrate((sin(t)**2 +\
+    \ 2*cos(t))*sqrt(3*sin(t)**2 + 1), (t, 0, 2*pi))\n\nruntimes = timeit.repeat(workload,\
+    \ number=1, repeat=3, setup=setup)\n\nprint(\"Mean:\", statistics.mean(runtimes))\n\
+    print(\"Std Dev:\", statistics.stdev(runtimes))"
+docker:
+  base_image: docker.io/sweperf/sweperf:sympy__sympy-20989
+  human_image: docker.io/sweperf/sweperf_annotate:sympy__sympy-20989
+  llm_image: PLACEHOLDER
+  commands:
+    run_base: docker run --rm --name bench_{id}_base --mount type=bind,src=<WORKLOAD_PY>,dst=/tmp/workload.py
+      {base_image} /bin/bash -lc 'python /tmp/workload.py' 2>&1
+    run_human: docker run --rm --name bench_{id}_human --mount type=bind,src=<WORKLOAD_PY>,dst=/tmp/workload.py
+      {human_image} /bin/bash -lc 'chmod +x /perf.sh && /perf.sh && python /tmp/workload.py'
+      2>&1
+    run_llm: echo 'LLM image not available yet for {id}. Please fill docker.llm_image.'
+metrics:
+  reducer: mean_std
+  parse_regex:
+    mean: (?i)\bMean:\s*([0-9.]+)
+    std: (?i)(Std Dev|SD):\s*([0-9.]+)
+notes:
+  user_notes: "An error occurred:\n\n+ source /opt/miniconda3/bin/activate\n++ _CONDA_ROOT=/opt/miniconda3\n\
+    ++ . /opt/miniconda3/etc/profile.d/conda.sh\n+++ export CONDA_EXE=/opt/miniconda3/bin/conda\n\
+    +++ CONDA_EXE=/opt/miniconda3/bin/conda\n+++ export _CE_M=\n+++ _CE_M=\n+++ export\
+    \ _CE_CONDA=\n+++ _CE_CONDA=\n+++ export CONDA_PYTHON_EXE=/opt/miniconda3/bin/python\n\
+    +++ CONDA_PYTHON_EXE=/opt/miniconda3/bin/python\n+++ '[' -z '' ']'\n+++ export\
+    \ CONDA_SHLVL=0\n+++ CONDA_SHLVL=0\n+++ '[' -n '' ']'\n+++++ dirname /opt/miniconda3/bin/conda\n\
+    ++++ dirname /opt/miniconda3/bin\n+++ PATH=/opt/miniconda3/condabin:/opt/miniconda3/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin\n\
+    +++ export PATH\n+++ '[' -z '' ']'\n+++ PS1=\n++ conda activate\n++ local cmd=activate\n\
+    ++ case \"$cmd\" in\n++ __conda_activate activate\n++ '[' -n '' ']'\n++ local\
+    \ ask_conda\n+++ PS1=\n+++ __conda_exe shell.posix activate\n+++ /opt/miniconda3/bin/conda\
+    \ shell.posix activate\n++ ask_conda='PS1='\\''(base) '\\''\nexport PATH='\\''/opt/miniconda3/bin:/opt/miniconda3/condabin:/opt/miniconda3/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin'\\\
+    ''\nexport CONDA_PREFIX='\\''/opt/miniconda3'\\''\nexport CONDA_SHLVL='\\''1'\\\
+    ''\nexport CONDA_DEFAULT_ENV='\\''base'\\''\nexport CONDA_PROMPT_MODIFIER='\\\
+    ''(base) '\\''\nexport CONDA_EXE='\\''/opt/miniconda3/bin/conda'\\''\nexport _CE_M='\\\
+    '''\\''\nexport _CE_CONDA='\\'''\\''\nexport CONDA_PYTHON_EXE='\\''/opt/miniconda3/bin/python'\\\
+    '''\n++ eval 'PS1='\\''(base) '\\''\nexport PATH='\\''/opt/miniconda3/bin:/opt/miniconda3/condabin:/opt/miniconda3/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin'\\\
+    ''\nexport CONDA_PREFIX='\\''/opt/miniconda3'\\''\nexport CONDA_SHLVL='\\''1'\\\
+    ''\nexport CONDA_DEFAULT_ENV='\\''base'\\''\nexport CONDA_PROMPT_MODIFIER='\\\
+    ''(base) '\\''\nexport CONDA_EXE='\\''/opt/miniconda3/bin/conda'\\''\nexport _CE_M='\\\
+    '''\\''\nexport _CE_CONDA='\\'''\\''\nexport CONDA_PYTHON_EXE='\\''/opt/miniconda3/bin/python'\\\
+    '''\n+++ PS1='(base) '\n+++ export PATH=/opt/miniconda3/bin:/opt/miniconda3/condabin:/opt/miniconda3/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin\n\
+    +++ PATH=/opt/miniconda3/bin:/opt/miniconda3/condabin:/opt/miniconda3/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin\n\
+    +++ export CONDA_PREFIX=/opt/miniconda3\n+++ CONDA_PREFIX=/opt/miniconda3\n+++\
+    \ export CONDA_SHLVL=1\n+++ CONDA_SHLVL=1\n+++ export CONDA_DEFAULT_ENV=base\n\
+    +++ CONDA_DEFAULT_ENV=base\n+++ export 'CONDA_PROMPT_MODIFIER=(base) '\n+++ CONDA_PROMPT_MODIFIER='(base)\
+    \ '\n+++ export CONDA_EXE=/opt/miniconda3/bin/conda\n+++ CONDA_EXE=/opt/miniconda3/bin/conda\n\
+    +++ export _CE_M=\n+++ _CE_M=\n+++ export _CE_CONDA=\n+++ _CE_CONDA=\n+++ export\
+    \ CONDA_PYTHON_EXE=/opt/miniconda3/bin/python\n+++ CONDA_PYTHON_EXE=/opt/miniconda3/bin/python\n\
+    ++ __conda_hashr\n++ '[' -n '' ']'\n++ '[' -n '' ']'\n++ hash -r\n+ conda activate\
+    \ testbed\n+ local cmd=activate\n+ case \"$cmd\" in\n+ __conda_activate activate\
+    \ testbed\n+ '[' -n '' ']'\n+ local ask_conda\n++ PS1='(base) '\n++ __conda_exe\
+    \ shell.posix activate testbed\n++ /opt/miniconda3/bin/conda shell.posix activate\
+    \ testbed\n+ ask_conda='PS1='\\''(testbed) '\\''\nexport PATH='\\''/opt/miniconda3/envs/testbed/bin:/opt/miniconda3/condabin:/opt/miniconda3/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin'\\\
+    ''\nexport CONDA_PREFIX='\\''/opt/miniconda3/envs/testbed'\\''\nexport CONDA_SHLVL='\\\
+    ''2'\\''\nexport CONDA_DEFAULT_ENV='\\''testbed'\\''\nexport CONDA_PROMPT_MODIFIER='\\\
+    ''(testbed) '\\''\nexport CONDA_PREFIX_1='\\''/opt/miniconda3'\\''\nexport CONDA_EXE='\\\
+    ''/opt/miniconda3/bin/conda'\\''\nexport _CE_M='\\'''\\''\nexport _CE_CONDA='\\\
+    '''\\''\nexport CONDA_PYTHON_EXE='\\''/opt/miniconda3/bin/python'\\'''\n+ eval\
+    \ 'PS1='\\''(testbed) '\\''\nexport PATH='\\''/opt/miniconda3/envs/testbed/bin:/opt/miniconda3/condabin:/opt/miniconda3/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin'\\\
+    ''\nexport CONDA_PREFIX='\\''/opt/miniconda3/envs/testbed'\\''\nexport CONDA_SHLVL='\\\
+    ''2'\\''\nexport CONDA_DEFAULT_ENV='\\''testbed'\\''\nexport CONDA_PROMPT_MODIFIER='\\\
+    ''(testbed) '\\''\nexport CONDA_PREFIX_1='\\''/opt/miniconda3'\\''\nexport CONDA_EXE='\\\
+    ''/opt/miniconda3/bin/conda'\\''\nexport _CE_M='\\'''\\''\nexport _CE_CONDA='\\\
+    '''\\''\nexport CONDA_PYTHON_EXE='\\''/opt/miniconda3/bin/python'\\'''\n++ PS1='(testbed)\
+    \ '\n++ export PATH=/opt/miniconda3/envs/testbed/bin:/opt/miniconda3/condabin:/opt/miniconda3/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin\n\
+    ++ PATH=/opt/miniconda3/envs/testbed/bin:/opt/miniconda3/condabin:/opt/miniconda3/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin\n\
+    ++ export CONDA_PREFIX=/opt/miniconda3/envs/testbed\n++ CONDA_PREFIX=/opt/miniconda3/envs/testbed\n\
+    ++ export CONDA_SHLVL=2\n++ CONDA_SHLVL=2\n++ export CONDA_DEFAULT_ENV=testbed\n\
+    ++ CONDA_DEFAULT_ENV=testbed\n++ export 'CONDA_PROMPT_MODIFIER=(testbed) '\n++\
+    \ CONDA_PROMPT_MODIFIER='(testbed) '\n++ export CONDA_PREFIX_1=/opt/miniconda3\n\
+    ++ CONDA_PREFIX_1=/opt/miniconda3\n++ export CONDA_EXE=/opt/miniconda3/bin/conda\n\
+    ++ CONDA_EXE=/opt/miniconda3/bin/conda\n++ export _CE_M=\n++ _CE_M=\n++ export\
+    \ _CE_CONDA=\n++ _CE_CONDA=\n++ export CONDA_PYTHON_EXE=/opt/miniconda3/bin/python\n\
+    ++ CONDA_PYTHON_EXE=/opt/miniconda3/bin/python\n+ __conda_hashr\n+ '[' -n '' ']'\n\
+    + '[' -n '' ']'\n+ hash -r\n+ cd /testbed\n+ git config --global --add safe.directory\
+    \ /testbed\n+ cd /testbed\n+ git status\nOn branch master\nnothing to commit,\
+    \ working tree clean\n+ git show\ncommit 3572b1955d089e94d5af5b388b557fc26719ee1b\n\
+    Merge: d506702bac 72864c7c1d\nAuthor: Oscar Benjamin <oscar.j.benjamin@gmail.com>\n\
+    Date:   Sun Feb 21 10:54:53 2021 +0000\n\n    Merge pull request #20988 from hyadav2k/20985_poly_domains\n\
+    \    \n    added methods and tests for CC\n\n+ git diff 3572b1955d089e94d5af5b388b557fc26719ee1b\n\
+    + source /opt/miniconda3/bin/activate\n++ _CONDA_ROOT=/opt/miniconda3\n++ . /opt/miniconda3/etc/profile.d/conda.sh\n\
+    +++ export CONDA_EXE=/opt/miniconda3/bin/conda\n+++ CONDA_EXE=/opt/miniconda3/bin/conda\n\
+    +++ export _CE_M=\n+++ _CE_M=\n+++ export _CE_CONDA=\n+++ _CE_CONDA=\n+++ export\
+    \ CONDA_PYTHON_EXE=/opt/miniconda3/bin/python\n+++ CONDA_PYTHON_EXE=/opt/miniconda3/bin/python\n\
+    +++ '[' -z x ']'\n++ conda activate\n++ local cmd=activate\n++ case \"$cmd\" in\n\
+    ++ __conda_activate activate\n++ '[' -n '' ']'\n++ local ask_conda\n+++ PS1='(testbed)\
+    \ '\n+++ __conda_exe shell.posix activate\n+++ /opt/miniconda3/bin/conda shell.posix\
+    \ activate\n++ ask_conda='PS1='\\''(base) '\\''\nexport PATH='\\''/opt/miniconda3/bin:/opt/miniconda3/condabin:/opt/miniconda3/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin'\\\
+    ''\nexport CONDA_PREFIX='\\''/opt/miniconda3'\\''\nexport CONDA_SHLVL='\\''3'\\\
+    ''\nexport CONDA_DEFAULT_ENV='\\''base'\\''\nexport CONDA_PROMPT_MODIFIER='\\\
+    ''(base) '\\''\nexport CONDA_PREFIX_2='\\''/opt/miniconda3/envs/testbed'\\''\n\
+    export CONDA_EXE='\\''/opt/miniconda3/bin/conda'\\''\nexport _CE_M='\\'''\\''\n\
+    export _CE_CONDA='\\'''\\''\nexport CONDA_PYTHON_EXE='\\''/opt/miniconda3/bin/python'\\\
+    '''\n++ eval 'PS1='\\''(base) '\\''\nexport PATH='\\''/opt/miniconda3/bin:/opt/miniconda3/condabin:/opt/miniconda3/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin'\\\
+    ''\nexport CONDA_PREFIX='\\''/opt/miniconda3'\\''\nexport CONDA_SHLVL='\\''3'\\\
+    ''\nexport CONDA_DEFAULT_ENV='\\''base'\\''\nexport CONDA_PROMPT_MODIFIER='\\\
+    ''(base) '\\''\nexport CONDA_PREFIX_2='\\''/opt/miniconda3/envs/testbed'\\''\n\
+    export CONDA_EXE='\\''/opt/miniconda3/bin/conda'\\''\nexport _CE_M='\\'''\\''\n\
+    export _CE_CONDA='\\'''\\''\nexport CONDA_PYTHON_EXE='\\''/opt/miniconda3/bin/python'\\\
+    '''\n+++ PS1='(base) '\n+++ export PATH=/opt/miniconda3/bin:/opt/miniconda3/condabin:/opt/miniconda3/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin\n\
+    +++ PATH=/opt/miniconda3/bin:/opt/miniconda3/condabin:/opt/miniconda3/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin\n\
+    +++ export CONDA_PREFIX=/opt/miniconda3\n+++ CONDA_PREFIX=/opt/miniconda3\n+++\
+    \ export CONDA_SHLVL=3\n+++ CONDA_SHLVL=3\n+++ export CONDA_DEFAULT_ENV=base\n\
+    +++ CONDA_DEFAULT_ENV=base\n+++ export 'CONDA_PROMPT_MODIFIER=(base) '\n+++ CONDA_PROMPT_MODIFIER='(base)\
+    \ '\n+++ export CONDA_PREFIX_2=/opt/miniconda3/envs/testbed\n+++ CONDA_PREFIX_2=/opt/miniconda3/envs/testbed\n\
+    +++ export CONDA_EXE=/opt/miniconda3/bin/conda\n+++ CONDA_EXE=/opt/miniconda3/bin/conda\n\
+    +++ export _CE_M=\n+++ _CE_M=\n+++ export _CE_CONDA=\n+++ _CE_CONDA=\n+++ export\
+    \ CONDA_PYTHON_EXE=/opt/miniconda3/bin/python\n+++ CONDA_PYTHON_EXE=/opt/miniconda3/bin/python\n\
+    ++ __conda_hashr\n++ '[' -n '' ']'\n++ '[' -n '' ']'\n++ hash -r\n+ conda activate\
+    \ testbed\n+ local cmd=activate\n+ case \"$cmd\" in\n+ __conda_activate activate\
+    \ testbed\n+ '[' -n '' ']'\n+ local ask_conda\n++ PS1='(base) '\n++ __conda_exe\
+    \ shell.posix activate testbed\n++ /opt/miniconda3/bin/conda shell.posix activate\
+    \ testbed\n+ ask_conda='PS1='\\''(testbed) '\\''\nexport PATH='\\''/opt/miniconda3/envs/testbed/bin:/opt/miniconda3/condabin:/opt/miniconda3/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin'\\\
+    ''\nexport CONDA_PREFIX='\\''/opt/miniconda3/envs/testbed'\\''\nexport CONDA_SHLVL='\\\
+    ''4'\\''\nexport CONDA_DEFAULT_ENV='\\''testbed'\\''\nexport CONDA_PROMPT_MODIFIER='\\\
+    ''(testbed) '\\''\nexport CONDA_PREFIX_3='\\''/opt/miniconda3'\\''\nexport CONDA_EXE='\\\
+    ''/opt/miniconda3/bin/conda'\\''\nexport _CE_M='\\'''\\''\nexport _CE_CONDA='\\\
+    '''\\''\nexport CONDA_PYTHON_EXE='\\''/opt/miniconda3/bin/python'\\'''\n+ eval\
+    \ 'PS1='\\''(testbed) '\\''\nexport PATH='\\''/opt/miniconda3/envs/testbed/bin:/opt/miniconda3/condabin:/opt/miniconda3/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin'\\\
+    ''\nexport CONDA_PREFIX='\\''/opt/miniconda3/envs/testbed'\\''\nexport CONDA_SHLVL='\\\
+    ''4'\\''\nexport CONDA_DEFAULT_ENV='\\''testbed'\\''\nexport CONDA_PROMPT_MODIFIER='\\\
+    ''(testbed) '\\''\nexport CONDA_PREFIX_3='\\''/opt/miniconda3'\\''\nexport CONDA_EXE='\\\
+    ''/opt/miniconda3/bin/conda'\\''\nexport _CE_M='\\'''\\''\nexport _CE_CONDA='\\\
+    '''\\''\nexport CONDA_PYTHON_EXE='\\''/opt/miniconda3/bin/python'\\'''\n++ PS1='(testbed)\
+    \ '\n++ export PATH=/opt/miniconda3/envs/testbed/bin:/opt/miniconda3/condabin:/opt/miniconda3/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin\n\
+    ++ PATH=/opt/miniconda3/envs/testbed/bin:/opt/miniconda3/condabin:/opt/miniconda3/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin\n\
+    ++ export CONDA_PREFIX=/opt/miniconda3/envs/testbed\n++ CONDA_PREFIX=/opt/miniconda3/envs/testbed\n\
+    ++ export CONDA_SHLVL=4\n++ CONDA_SHLVL=4\n++ export CONDA_DEFAULT_ENV=testbed\n\
+    ++ CONDA_DEFAULT_ENV=testbed\n++ export 'CONDA_PROMPT_MODIFIER=(testbed) '\n++\
+    \ CONDA_PROMPT_MODIFIER='(testbed) '\n++ export CONDA_PREFIX_3=/opt/miniconda3\n\
+    ++ CONDA_PREFIX_3=/opt/miniconda3\n++ export CONDA_EXE=/opt/miniconda3/bin/conda\n\
+    ++ CONDA_EXE=/opt/miniconda3/bin/conda\n++ export _CE_M=\n++ _CE_M=\n++ export\
+    \ _CE_CONDA=\n++ _CE_CONDA=\n++ export CONDA_PYTHON_EXE=/opt/miniconda3/bin/python\n\
+    ++ CONDA_PYTHON_EXE=/opt/miniconda3/bin/python\n+ __conda_hashr\n+ '[' -n '' ']'\n\
+    + '[' -n '' ']'\n+ hash -r\n+ python -m pip install -e .\nObtaining file:///testbed\n\
+    \  Preparing metadata (setup.py): started\n  Preparing metadata (setup.py): finished\
+    \ with status 'done'\nRequirement already satisfied: mpmath>=0.19 in /opt/miniconda3/envs/testbed/lib/python3.8/site-packages\
+    \ (from sympy==1.8.dev0) (1.3.0)\nInstalling collected packages: sympy\n  Attempting\
+    \ uninstall: sympy\n    Found existing installation: sympy 1.8.dev0\n    Uninstalling\
+    \ sympy-1.8.dev0:\n      Successfully uninstalled sympy-1.8.dev0\n  DEPRECATION:\
+    \ Legacy editable install of sympy==1.8.dev0 from file:///testbed (setup.py develop)\
+    \ is deprecated. pip 25.0 will enforce this behaviour change. A possible replacement\
+    \ is to add a pyproject.toml or enable --use-pep517, and use setuptools >= 64.\
+    \ If the resulting installation is not behaving as expected, try using --config-settings\
+    \ editable_mode=compat. Please consult the setuptools documentation for more information.\
+    \ Discussion can be found at https://github.com/pypa/pip/issues/11457\n  Running\
+    \ setup.py develop for sympy\nSuccessfully installed sympy\nWARNING: Running pip\
+    \ as the 'root' user can result in broken permissions and conflicting behaviour\
+    \ with the system package manager, possibly rendering your system unusable.It\
+    \ is recommended to use a virtual environment instead: https://pip.pypa.io/warnings/venv.\
+    \ Use the --root-user-action option if you know what you are doing and want to\
+    \ suppress this warning.\n+ echo PERF_START:\nPERF_START:\n+ python /tmp/workload.py\n\
+    Mean: 466.23793699099525\nStd Dev: 5.318502650122231\n/testbed/sympy/external/importtools.py:158:\
+    \ DeprecationWarning: distutils Version classes are deprecated. Use packaging.version\
+    \ instead.\n  if LooseVersion(modversion) < LooseVersion(min_module_version):\n\
+    + echo PERF_END:\nPERF_END:\n+ python -m cProfile -o /tmp/workload_cprofile.prof\
+    \ /tmp/workload.py\n\n\nTimeout error: 3600 seconds exceeded."
+  mike_notes: ''
+meta:
+  num_covering_tests: '53'

@@ -1,0 +1,55 @@
+id: pandas-dev__pandas-39388
+status:
+  human: APPROVED
+  llm: COMING_SOON
+comparison:
+  llm_better: COMING_SOON
+repo:
+  org: pandas-dev
+  name: pandas
+  url: https://github.com/pandas-dev/pandas
+  pull_request: https://github.com/pandas-dev/pandas/pull/39388
+  base_commit: 37b5800afb335fe1d09dde9153ca32c48c39f73e
+  created_at: '2021-01-25 3:32:10'
+  version: '1.2'
+workload:
+  language: python
+  code: "\nimport timeit\nimport statistics\n\nimport pandas as pd\nimport numpy as\
+    \ np\n\nwindow_options = [10, 1000, None]\nmethod_options = [\"corr\", \"cov\"\
+    ]\npairwise_options = [True, False]\n\nN = 10 ** 4\n\narr = np.random.random(N)\n\
+    df = pd.DataFrame(arr)\n\ndef workload():\n    for window in window_options:\n\
+    \        for method in method_options:\n            for pairwise in pairwise_options:\n\
+    \                if window is None:\n                    r = df.expanding()\n\
+    \                else:\n                    r = df.rolling(window=window)\n  \
+    \              getattr(r, method)(df, pairwise=pairwise)\n\nruntimes = timeit.repeat(workload,\
+    \ number=1, repeat=100)\n\nprint(\"Mean:\", statistics.mean(runtimes))\nprint(\"\
+    Std Dev:\", statistics.stdev(runtimes))"
+docker:
+  base_image: docker.io/sweperf/sweperf:pandas-dev__pandas-39388
+  human_image: docker.io/sweperf/sweperf_annotate:pandas-dev__pandas-39388
+  llm_image: PLACEHOLDER
+  commands:
+    run_base: docker run --rm --name bench_{id}_base --mount type=bind,src=<WORKLOAD_PY>,dst=/tmp/workload.py
+      {base_image} /bin/bash -lc 'python /tmp/workload.py' 2>&1
+    run_human: docker run --rm --name bench_{id}_human --mount type=bind,src=<WORKLOAD_PY>,dst=/tmp/workload.py
+      {human_image} /bin/bash -lc 'chmod +x /perf.sh && /perf.sh && python /tmp/workload.py'
+      2>&1
+    run_llm: echo 'LLM image not available yet for {id}. Please fill docker.llm_image.'
+metrics:
+  reducer: mean_std
+  parse_regex:
+    mean: (?i)\bMean:\s*([0-9.]+)
+    std: (?i)(Std Dev|SD):\s*([0-9.]+)
+notes:
+  user_notes: 'Before Mean: 0.06483996267081238
+
+    Before SD: 0.0009963897470379411
+
+    After Mean: 0.050704034211230466
+
+    After SD: 0.0008624689223294472
+
+    Improvement: -21.80%'
+  mike_notes: ''
+meta:
+  num_covering_tests: '809'

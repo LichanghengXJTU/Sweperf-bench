@@ -1,0 +1,57 @@
+id: pandas-dev__pandas-51873
+status:
+  human: APPROVED
+  llm: COMING_SOON
+comparison:
+  llm_better: COMING_SOON
+repo:
+  org: pandas-dev
+  name: pandas
+  url: https://github.com/pandas-dev/pandas
+  pull_request: https://github.com/pandas-dev/pandas/pull/51873
+  base_commit: 7888cf47e509bc61871c599ee1b636c0f98c9076
+  created_at: '2023-03-09 22:33:40'
+  version: '1.5'
+workload:
+  language: python
+  code: "import pandas as pd\nimport numpy as np\nimport timeit\nimport statistics\n\
+    \ndef setup():\n    global mi, new_levels, levels_to_set\n    n_levels = 10\n\
+    \    n_labels = 100_000\n    n_rows = 1_000_000\n    arrays = [\n        np.random.randint(0,\
+    \ n_labels, size=n_rows)\n        for _ in range(n_levels)\n    ]\n    mi = pd.MultiIndex.from_arrays(arrays)\n\
+    \n    levels_to_set = [0, 1, 2]\n    new_levels = [np.arange(n_labels, n_labels\
+    \ * 2) for _ in levels_to_set]\n\ndef workload():\n    global mi, new_levels,\
+    \ levels_to_set\n    _ = mi.set_levels(new_levels, level=levels_to_set, verify_integrity=True)\n\
+    \    \nruntimes = timeit.repeat(workload, number=10, repeat=50, setup = setup)\n\
+    print(\"Mean:\", statistics.mean(runtimes))\nprint(\"Std Dev:\", statistics.stdev(runtimes))"
+docker:
+  base_image: docker.io/sweperf/sweperf:pandas-dev__pandas-51873
+  human_image: docker.io/sweperf/sweperf_annotate:pandas-dev__pandas-51873
+  llm_image: PLACEHOLDER
+  commands:
+    run_base: docker run --rm --name bench_{id}_base --mount type=bind,src=<WORKLOAD_PY>,dst=/tmp/workload.py
+      {base_image} /bin/bash -lc 'python /tmp/workload.py' 2>&1
+    run_human: docker run --rm --name bench_{id}_human --mount type=bind,src=<WORKLOAD_PY>,dst=/tmp/workload.py
+      {human_image} /bin/bash -lc 'chmod +x /perf.sh && /perf.sh && python /tmp/workload.py'
+      2>&1
+    run_llm: echo 'LLM image not available yet for {id}. Please fill docker.llm_image.'
+metrics:
+  reducer: mean_std
+  parse_regex:
+    mean: (?i)\bMean:\s*([0-9.]+)
+    std: (?i)(Std Dev|SD):\s*([0-9.]+)
+notes:
+  user_notes: 'An error occurred:
+
+
+    An unknown error occurred. Please check the local files.'
+  mike_notes: 'Mean: 0.10833288924070075
+
+    Std Dev: 0.00872848453800413
+
+    Mean: 0.0932918742595939
+
+    Std Dev: 0.009019986951226012
+
+    Improvement:-13.88%'
+meta:
+  num_covering_tests: '909'

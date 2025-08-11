@@ -1,0 +1,54 @@
+id: scipy__scipy-10467
+status:
+  human: APPROVED
+  llm: COMING_SOON
+comparison:
+  llm_better: COMING_SOON
+repo:
+  org: scipy
+  name: scipy
+  url: https://github.com/scipy/scipy
+  pull_request: https://github.com/scipy/scipy/pull/10467
+  base_commit: c7038c0c85b41686a2c91007729ffd4ca94d57b5
+  created_at: '2019-07-15 18:41:27'
+  version: '1.3'
+workload:
+  language: python
+  code: "import timeit\nimport statistics\nimport numpy as np\nfrom scipy.spatial\
+    \ import SphericalVoronoi\n\ndef setup():\n    global points\n    np.random.seed(0)\n\
+    \    num_points = 10000\n    phi = np.random.uniform(0, 2 * np.pi, num_points)\n\
+    \    cos_theta = np.random.uniform(-1, 1, num_points)\n    theta = np.arccos(cos_theta)\n\
+    \    x = np.sin(theta) * np.cos(phi)\n    y = np.sin(theta) * np.sin(phi)\n  \
+    \  z = np.cos(theta)\n    points = np.column_stack((x, y, z))\n    \n\ndef workload():\n\
+    \    global points\n    sv = SphericalVoronoi(points)\n\nruntimes = timeit.repeat(workload,\
+    \ number=1, repeat=200, setup=setup)\n\nprint(\"Mean:\", statistics.mean(runtimes[-100:]))\n\
+    print(\"Std Dev:\", statistics.stdev(runtimes[-100:]))"
+docker:
+  base_image: docker.io/sweperf/sweperf:scipy__scipy-10467
+  human_image: docker.io/sweperf/sweperf_annotate:scipy__scipy-10467
+  llm_image: PLACEHOLDER
+  commands:
+    run_base: docker run --rm --name bench_{id}_base --mount type=bind,src=<WORKLOAD_PY>,dst=/tmp/workload.py
+      {base_image} /bin/bash -lc 'python /tmp/workload.py' 2>&1
+    run_human: docker run --rm --name bench_{id}_human --mount type=bind,src=<WORKLOAD_PY>,dst=/tmp/workload.py
+      {human_image} /bin/bash -lc 'chmod +x /perf.sh && /perf.sh && python /tmp/workload.py'
+      2>&1
+    run_llm: echo 'LLM image not available yet for {id}. Please fill docker.llm_image.'
+metrics:
+  reducer: mean_std
+  parse_regex:
+    mean: (?i)\bMean:\s*([0-9.]+)
+    std: (?i)(Std Dev|SD):\s*([0-9.]+)
+notes:
+  user_notes: 'Before Mean: 0.31272347076126605
+
+    Before SD: 0.002559021438871953
+
+    After Mean: 0.11504873721016338
+
+    After SD: 0.0007297008197024148
+
+    Improvement: -63.21%'
+  mike_notes: ''
+meta:
+  num_covering_tests: '1'

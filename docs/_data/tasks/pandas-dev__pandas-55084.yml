@@ -1,0 +1,70 @@
+id: pandas-dev__pandas-55084
+status:
+  human: APPROVED
+  llm: COMING_SOON
+comparison:
+  llm_better: COMING_SOON
+repo:
+  org: pandas-dev
+  name: pandas
+  url: https://github.com/pandas-dev/pandas
+  pull_request: https://github.com/pandas-dev/pandas/pull/55084
+  base_commit: 723feb984e6516e3e1798d3c4440c844b12ea18f
+  created_at: '2023-09-11 1:26:52'
+  version: '2.1'
+workload:
+  language: python
+  code: "import timeit\nimport statistics\n\nimport numpy as np\nimport pandas as\
+    \ pd\nimport pandas._testing as tm\n\nN = 10_000\ndtypes = [\n    \"datetime64[ns]\"\
+    ,\n    \"int64\",\n    \"Int64\",\n    \"int64[pyarrow]\",\n    \"string[python]\"\
+    ,\n    \"string[pyarrow]\",\n]\nstructures = [\"monotonic\", \"non_monotonic\"\
+    , \"has_na\"]\naxes = [0, 1]\nsorts = [True, False]\n\nseries_registry = []\n\n\
+    \nfor dtype in dtypes:\n    for structure in structures:\n        for axis in\
+    \ axes:\n            for sort in sorts:\n                if dtype == \"datetime64[ns]\"\
+    :\n                    vals = pd.date_range(\"1970-01-01\", periods=N)\n     \
+    \           elif dtype in (\"int64\", \"Int64\", \"int64[pyarrow]\"):\n      \
+    \              vals = np.arange(N, dtype=np.int64)\n                elif dtype\
+    \ in (\"string[python]\", \"string[pyarrow]\"):\n                    vals = tm.makeStringIndex(N)\n\
+    \                else:\n                    continue\n\n                idx =\
+    \ pd.Index(vals, dtype=dtype)\n\n                if structure == \"monotonic\"\
+    :\n                    idx = idx.sort_values()\n                elif structure\
+    \ == \"non_monotonic\":\n                    idx = idx[::-1]\n               \
+    \ elif structure == \"has_na\":\n                    if not idx._can_hold_na:\n\
+    \                        continue\n                    idx = pd.Index([None],\
+    \ dtype=dtype).append(idx)\n                else:\n                    continue\n\
+    \n                # Build a list of Series\n                series_list = [pd.Series(i,\
+    \ idx[:-i]) for i in range(1, 6)]\n                series_registry.append((series_list,\
+    \ axis, sort))\n\n        \ndef workload():\n    for series_list, axis, sort in\
+    \ series_registry:\n        pd.concat(series_list, axis=axis, sort=sort)\n   \
+    \         \nruntimes = timeit.repeat(workload, number=5, repeat=100)\n\n# Print\
+    \ runtime mean and std deviation.\nprint(\"Mean:\", statistics.mean(runtimes))\n\
+    print(\"Std Dev:\", statistics.stdev(runtimes))\n"
+docker:
+  base_image: docker.io/sweperf/sweperf:pandas-dev__pandas-55084
+  human_image: docker.io/sweperf/sweperf_annotate:pandas-dev__pandas-55084
+  llm_image: PLACEHOLDER
+  commands:
+    run_base: docker run --rm --name bench_{id}_base --mount type=bind,src=<WORKLOAD_PY>,dst=/tmp/workload.py
+      {base_image} /bin/bash -lc 'python /tmp/workload.py' 2>&1
+    run_human: docker run --rm --name bench_{id}_human --mount type=bind,src=<WORKLOAD_PY>,dst=/tmp/workload.py
+      {human_image} /bin/bash -lc 'chmod +x /perf.sh && /perf.sh && python /tmp/workload.py'
+      2>&1
+    run_llm: echo 'LLM image not available yet for {id}. Please fill docker.llm_image.'
+metrics:
+  reducer: mean_std
+  parse_regex:
+    mean: (?i)\bMean:\s*([0-9.]+)
+    std: (?i)(Std Dev|SD):\s*([0-9.]+)
+notes:
+  user_notes: 'Before Mean: 1.0846222105860943
+
+    Before SD: 0.01436798772222063
+
+    After Mean: 0.801979253544705
+
+    After SD: 0.013547719206888846
+
+    Improvement: -26.06%'
+  mike_notes: ''
+meta:
+  num_covering_tests: '77'

@@ -1,0 +1,67 @@
+id: matplotlib__matplotlib-17995
+status:
+  human: APPROVED
+  llm: COMING_SOON
+comparison:
+  llm_better: COMING_SOON
+repo:
+  org: matplotlib
+  name: matplotlib
+  url: https://github.com/matplotlib/matplotlib
+  pull_request: https://github.com/matplotlib/matplotlib/pull/17995
+  base_commit: 096d0ac1537f396528cdea0709e7d9d4125478df
+  created_at: '2020-07-21 12:53:35'
+  version: '3.3'
+workload:
+  language: python
+  code: "import timeit\nimport statistics\n\nimport matplotlib.pyplot as plt\nimport\
+    \ numpy as np\nfrom matplotlib.patches import Polygon\nimport tempfile\nimport\
+    \ os\n\ntempfile_path = tempfile.NamedTemporaryFile(delete=False).name\n\ndef\
+    \ tstack(a):\n    return np.concatenate([x[..., np.newaxis] for x in a], axis=-1)\n\
+    \nx_min, x_max = 360, 780\nwl = np.arange(x_min, x_max, 1)\nwl_len = len(wl)\n\
+    colours = np.random.random([wl_len, 3])  # random colours held constant per run\n\
+    padding = 0.1\n\n\ndef workload():\n    \"\"\"\n    The code whose performance\
+    \ we want to measure.\n    Re-creates the figure each iteration so the measurement\
+    \ includes\n    everything from plotting through layout to file I/O.\n    \"\"\
+    \"\n    values = np.sin(wl / 50) * 125 + 125\n\n    fig = plt.figure(figsize=(10.24,\
+    \ 7.68))\n    ax = fig.gca()\n\n    # Construct clipping polygon\n    polygon\
+    \ = Polygon(\n        np.vstack([\n            (x_min, 0),\n            tstack([wl,\
+    \ values]),\n            (x_max, 0),\n        ]),\n        facecolor='none',\n\
+    \        edgecolor='none'\n    )\n    ax.add_patch(polygon)\n\n    # Draw bars\
+    \ clipped by the polygon\n    ax.bar(\n        x=wl - padding,\n        height=max(values),\n\
+    \        width=1 + padding,\n        color=colours,\n        align='edge',\n \
+    \       clip_path=polygon\n    )\n\n    # Overlay line plot and axis limits\n\
+    \    ax.plot(wl, values)\n    ax.set_xlim(x_min, x_max)\n    ax.set_ylim(0, 250)\n\
+    \n    fig.tight_layout()\n    fig.savefig(tempfile_path)\n    plt.close(fig)\n\
+    \    \nos.remove(tempfile_path)  # Clean up the temporary file after saving\n\n\
+    runtimes = timeit.repeat(workload, number=1, repeat=3)\n\nprint(\"Mean:\", statistics.mean(runtimes))\n\
+    print(\"Std Dev:\", statistics.stdev(runtimes))"
+docker:
+  base_image: docker.io/sweperf/sweperf:matplotlib__matplotlib-17995
+  human_image: docker.io/sweperf/sweperf_annotate:matplotlib__matplotlib-17995
+  llm_image: PLACEHOLDER
+  commands:
+    run_base: docker run --rm --name bench_{id}_base --mount type=bind,src=<WORKLOAD_PY>,dst=/tmp/workload.py
+      {base_image} /bin/bash -lc 'python /tmp/workload.py' 2>&1
+    run_human: docker run --rm --name bench_{id}_human --mount type=bind,src=<WORKLOAD_PY>,dst=/tmp/workload.py
+      {human_image} /bin/bash -lc 'chmod +x /perf.sh && /perf.sh && python /tmp/workload.py'
+      2>&1
+    run_llm: echo 'LLM image not available yet for {id}. Please fill docker.llm_image.'
+metrics:
+  reducer: mean_std
+  parse_regex:
+    mean: (?i)\bMean:\s*([0-9.]+)
+    std: (?i)(Std Dev|SD):\s*([0-9.]+)
+notes:
+  user_notes: 'Before Mean: 4.850268914344876
+
+    Before SD: 0.008279718485243327
+
+    After Mean: 0.3311978313140571
+
+    After SD: 0.00524409998125318
+
+    Improvement: -93.17%'
+  mike_notes: ''
+meta:
+  num_covering_tests: '56'

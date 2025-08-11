@@ -1,0 +1,54 @@
+id: scikit-learn__scikit-learn-19571
+status:
+  human: APPROVED
+  llm: COMING_SOON
+comparison:
+  llm_better: COMING_SOON
+repo:
+  org: scikit-learn
+  name: scikit-learn
+  url: https://github.com/scikit-learn/scikit-learn
+  pull_request: https://github.com/scikit-learn/scikit-learn/pull/19571
+  base_commit: 94abe05b4b96de2ca30d998fb9adb2fbd3eb1bde
+  created_at: '2021-02-26 14:59:58'
+  version: '1'
+workload:
+  language: python
+  code: "import timeit\nimport statistics\n\nfrom sklearn.linear_model import LogisticRegression\n\
+    from sklearn.datasets import make_classification\n\nn_samples = 100_000\nn_features\
+    \ = 100\nn_informative = 10\nn_classes = 10\n\nX, y = make_classification(\n \
+    \   n_samples=n_samples,\n    n_features=n_features,\n    n_informative=n_informative,\n\
+    \    n_classes=n_classes,\n    random_state=0\n)\n\ndef setup():\n    global clf\n\
+    \    clf = LogisticRegression(\n        solver='newton-cg',\n        max_iter=20,\n\
+    \    )\n\ndef workload():\n    global clf\n    clf.fit(X, y)\n\n# Run benchmark\n\
+    runtimes = timeit.repeat(workload, number=1, repeat=10, setup=setup)\n\n# Output\
+    \ results\nprint(\"Mean:\", statistics.mean(runtimes))\nprint(\"Std Dev:\", statistics.stdev(runtimes))\n"
+docker:
+  base_image: docker.io/sweperf/sweperf:scikit-learn__scikit-learn-19571
+  human_image: docker.io/sweperf/sweperf_annotate:scikit-learn__scikit-learn-19571
+  llm_image: PLACEHOLDER
+  commands:
+    run_base: docker run --rm --name bench_{id}_base --mount type=bind,src=<WORKLOAD_PY>,dst=/tmp/workload.py
+      {base_image} /bin/bash -lc 'python /tmp/workload.py' 2>&1
+    run_human: docker run --rm --name bench_{id}_human --mount type=bind,src=<WORKLOAD_PY>,dst=/tmp/workload.py
+      {human_image} /bin/bash -lc 'chmod +x /perf.sh && /perf.sh && python /tmp/workload.py'
+      2>&1
+    run_llm: echo 'LLM image not available yet for {id}. Please fill docker.llm_image.'
+metrics:
+  reducer: mean_std
+  parse_regex:
+    mean: (?i)\bMean:\s*([0-9.]+)
+    std: (?i)(Std Dev|SD):\s*([0-9.]+)
+notes:
+  user_notes: 'Before Mean: 4.324709565890953
+
+    Before SD: 0.026496300815689103
+
+    After Mean: 5.192308922408847
+
+    After SD: 2.36627115275578
+
+    Improvement: 20.06%'
+  mike_notes: ''
+meta:
+  num_covering_tests: '1'

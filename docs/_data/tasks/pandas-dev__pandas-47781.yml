@@ -1,0 +1,57 @@
+id: pandas-dev__pandas-47781
+status:
+  human: APPROVED
+  llm: COMING_SOON
+comparison:
+  llm_better: COMING_SOON
+repo:
+  org: pandas-dev
+  name: pandas
+  url: https://github.com/pandas-dev/pandas
+  pull_request: https://github.com/pandas-dev/pandas/pull/47781
+  base_commit: b69bd0755d654c0dba42042df7b2251918274327
+  created_at: '2022-07-18 19:25:46'
+  version: '1.4'
+workload:
+  language: python
+  code: "import timeit\nimport statistics\n\nimport pandas as pd\nimport numpy as\
+    \ np\nimport pyarrow as pa\nfrom pyarrow import parquet as pq\nimport tempfile\n\
+    import os\n\nn = 10000000\ndf = pd.DataFrame(\n    {\n        \"a\": np.random.choice([0,\
+    \ 1, None], n),\n        \"b\": np.random.choice([0, 10, 90129, None], n),\n \
+    \       \"c\": np.random.choice([True, False, None], n),\n        \"d\": np.random.choice([\"\
+    a\", \"b\", None], n),\n    },\n    dtype=object,\n)\ndf[\"a\"] = df[\"a\"].astype(\"\
+    Int8\")\ndf = df.convert_dtypes()\n\ntemp_path = tempfile.NamedTemporaryFile(suffix=\"\
+    .parquet\", delete=False).name\n\ntable = pa.Table.from_pandas(df)\ntable = table.replace_schema_metadata()\n\
+    pq.write_table(table, temp_path)\n\ndef workload():\n    df = pd.read_parquet(temp_path,\
+    \ use_nullable_dtypes=True)\n\nruntimes = timeit.repeat(workload, number=1, repeat=25)\n\
+    \nos.remove(temp_path)\n\n# Print runtime mean and std deviation.\nprint(\"Mean:\"\
+    , statistics.mean(runtimes))\nprint(\"Std Dev:\", statistics.stdev(runtimes))\n"
+docker:
+  base_image: docker.io/sweperf/sweperf:pandas-dev__pandas-47781
+  human_image: docker.io/sweperf/sweperf_annotate:pandas-dev__pandas-47781
+  llm_image: PLACEHOLDER
+  commands:
+    run_base: docker run --rm --name bench_{id}_base --mount type=bind,src=<WORKLOAD_PY>,dst=/tmp/workload.py
+      {base_image} /bin/bash -lc 'python /tmp/workload.py' 2>&1
+    run_human: docker run --rm --name bench_{id}_human --mount type=bind,src=<WORKLOAD_PY>,dst=/tmp/workload.py
+      {human_image} /bin/bash -lc 'chmod +x /perf.sh && /perf.sh && python /tmp/workload.py'
+      2>&1
+    run_llm: echo 'LLM image not available yet for {id}. Please fill docker.llm_image.'
+metrics:
+  reducer: mean_std
+  parse_regex:
+    mean: (?i)\bMean:\s*([0-9.]+)
+    std: (?i)(Std Dev|SD):\s*([0-9.]+)
+notes:
+  user_notes: 'Before Mean: 0.971940186440479
+
+    Before SD: 0.0177559115818046
+
+    After Mean: 0.4939593852846883
+
+    After SD: 0.015544292807478278
+
+    Improvement: -49.18%'
+  mike_notes: ''
+meta:
+  num_covering_tests: '3'

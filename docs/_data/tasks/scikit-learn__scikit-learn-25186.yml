@@ -1,0 +1,55 @@
+id: scikit-learn__scikit-learn-25186
+status:
+  human: APPROVED
+  llm: COMING_SOON
+comparison:
+  llm_better: COMING_SOON
+repo:
+  org: scikit-learn
+  name: scikit-learn
+  url: https://github.com/scikit-learn/scikit-learn
+  pull_request: https://github.com/scikit-learn/scikit-learn/pull/25186
+  base_commit: b2fe9746a862272a60ffc7d2c6563d28dd13a6c6
+  created_at: '2022-12-13 12:59:54'
+  version: '1.3'
+workload:
+  language: python
+  code: "import timeit\nimport statistics\n\nfrom sklearn.datasets import make_classification\n\
+    from sklearn.ensemble import IsolationForest\n\nfrom scipy.sparse import csc_matrix\n\
+    import numpy as np\n\nX, y = make_classification(n_samples=50000, n_features=100,\
+    \ random_state=0)\nX = X.astype(np.float32)\nX_sparse = csc_matrix(X)\n\ndef setup():\n\
+    \    global iso_forest, iso_forest_sparse\n    iso_forest = IsolationForest(n_estimators=100,\
+    \ max_samples=256, n_jobs=1, random_state=0).fit(X)\n    iso_forest_sparse = IsolationForest(n_estimators=100,\
+    \ max_samples=256, n_jobs=1, random_state=0).fit(X_sparse)\n\ndef workload():\n\
+    \    global iso_forest, iso_forest_sparse\n    iso_forest.predict(X)\n    iso_forest_sparse.predict(X_sparse)\n\
+    \nruntimes = timeit.repeat(workload, number=1, repeat=10, setup=setup)\n\nprint(\"\
+    Mean:\", statistics.mean(runtimes))\nprint(\"Std Dev:\", statistics.stdev(runtimes))\n"
+docker:
+  base_image: docker.io/sweperf/sweperf:scikit-learn__scikit-learn-25186
+  human_image: docker.io/sweperf/sweperf_annotate:scikit-learn__scikit-learn-25186
+  llm_image: PLACEHOLDER
+  commands:
+    run_base: docker run --rm --name bench_{id}_base --mount type=bind,src=<WORKLOAD_PY>,dst=/tmp/workload.py
+      {base_image} /bin/bash -lc 'python /tmp/workload.py' 2>&1
+    run_human: docker run --rm --name bench_{id}_human --mount type=bind,src=<WORKLOAD_PY>,dst=/tmp/workload.py
+      {human_image} /bin/bash -lc 'chmod +x /perf.sh && /perf.sh && python /tmp/workload.py'
+      2>&1
+    run_llm: echo 'LLM image not available yet for {id}. Please fill docker.llm_image.'
+metrics:
+  reducer: mean_std
+  parse_regex:
+    mean: (?i)\bMean:\s*([0-9.]+)
+    std: (?i)(Std Dev|SD):\s*([0-9.]+)
+notes:
+  user_notes: 'Before Mean: 3.257452732598176
+
+    Before SD: 0.03872206786221673
+
+    After Mean: 0.9360557617910672
+
+    After SD: 0.006626152133672018
+
+    Improvement: -71.26%'
+  mike_notes: ''
+meta:
+  num_covering_tests: '2'

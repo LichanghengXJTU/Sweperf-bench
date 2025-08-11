@@ -1,0 +1,60 @@
+id: scikit-learn__scikit-learn-10610
+status:
+  human: APPROVED
+  llm: COMING_SOON
+comparison:
+  llm_better: COMING_SOON
+repo:
+  org: scikit-learn
+  name: scikit-learn
+  url: https://github.com/scikit-learn/scikit-learn
+  pull_request: https://github.com/scikit-learn/scikit-learn/pull/10610
+  base_commit: 116c96c7cc3e340099a811ed0c985c8db61a3f6a
+  created_at: '2018-02-09 11:57:22'
+  version: '0.2'
+workload:
+  language: python
+  code: "import timeit\nimport statistics\nimport numpy as np\n\nfrom sklearn.datasets\
+    \ import fetch_mldata\nfrom sklearn.manifold import TSNE\nfrom sklearn.utils import\
+    \ check_array\nfrom sklearn.utils import shuffle as _shuffle\nfrom sklearn.neighbors\
+    \ import NearestNeighbors\n\ndef load_mnist(dtype=np.float32, order='C', shuffle=True,\
+    \ seed=0):\n    \"\"\"Load the data, then cache and memmap the train/test split\"\
+    \"\"\n    data = fetch_mldata('MNIST original')\n\n    X = check_array(data['data'],\
+    \ dtype=dtype, order=order)\n    y = data[\"target\"]\n\n    if shuffle:\n   \
+    \     X, y = _shuffle(X, y, random_state=seed)\n\n    # Normalize features\n \
+    \   X /= 255\n    return X, y\n\ndef make_tsne_model():\n    return TSNE(n_components=2,\
+    \ init=\"pca\", perplexity=30, verbose=0, n_iter=1000, method='barnes_hut')\n\n\
+    X, _ = load_mnist()\ndata = X[:10000]\n\ndef setup():\n    global tsne_model\n\
+    \    tsne_model = make_tsne_model()\n    \ndef workload():\n    global tsne_model\n\
+    \    tsne_model.fit_transform(data)\n\nruntimes = timeit.repeat(workload, number=1,\
+    \ repeat=3, setup=setup)\n\nprint(\"Mean:\", statistics.mean(runtimes))\nprint(\"\
+    Std Dev:\", statistics.stdev(runtimes))\n"
+docker:
+  base_image: docker.io/sweperf/sweperf:scikit-learn__scikit-learn-10610
+  human_image: docker.io/sweperf/sweperf_annotate:scikit-learn__scikit-learn-10610
+  llm_image: PLACEHOLDER
+  commands:
+    run_base: docker run --rm --name bench_{id}_base --mount type=bind,src=<WORKLOAD_PY>,dst=/tmp/workload.py
+      {base_image} /bin/bash -lc 'python /tmp/workload.py' 2>&1
+    run_human: docker run --rm --name bench_{id}_human --mount type=bind,src=<WORKLOAD_PY>,dst=/tmp/workload.py
+      {human_image} /bin/bash -lc 'chmod +x /perf.sh && /perf.sh && python /tmp/workload.py'
+      2>&1
+    run_llm: echo 'LLM image not available yet for {id}. Please fill docker.llm_image.'
+metrics:
+  reducer: mean_std
+  parse_regex:
+    mean: (?i)\bMean:\s*([0-9.]+)
+    std: (?i)(Std Dev|SD):\s*([0-9.]+)
+notes:
+  user_notes: 'Before Mean: 191.83623662069053
+
+    Before SD: 0.24267485491800456
+
+    After Mean: 151.54500339067695
+
+    After SD: 7.468323132613518
+
+    Improvement: -21.00%'
+  mike_notes: ''
+meta:
+  num_covering_tests: '1'

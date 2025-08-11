@@ -1,0 +1,55 @@
+id: matplotlib__matplotlib-18756
+status:
+  human: APPROVED
+  llm: COMING_SOON
+comparison:
+  llm_better: COMING_SOON
+repo:
+  org: matplotlib
+  name: matplotlib
+  url: https://github.com/matplotlib/matplotlib
+  pull_request: https://github.com/matplotlib/matplotlib/pull/18756
+  base_commit: cf83ec4f46ae03668a1d89273b28147497ab65f2
+  created_at: '2020-10-17 0:11:21'
+  version: '3.3'
+workload:
+  language: python
+  code: "import timeit\nimport statistics\n\nimport matplotlib.dates as mdates\nimport\
+    \ numpy as np\nimport datetime\n\ndef datetime_range(startDate, endDate, deltaDate):\n\
+    \    current = startDate\n    while current < endDate:\n        yield current\n\
+    \        current += deltaDate\n    return\n\nlist_of_dates = [\n    date for date\
+    \ in datetime_range(datetime.datetime(2020, 1, 1, 0, 1),\n                   \
+    \                 datetime.datetime(2020, 12, 31, 23, 59),\n                 \
+    \                   datetime.timedelta(minutes=1))\n]\n\ndef workload():\n   \
+    \ mdates.date2num(list_of_dates)\n\nruntimes = timeit.repeat(workload, number=1,\
+    \ repeat=5)\n\nprint(\"Mean:\", statistics.mean(runtimes))\nprint(\"Std Dev:\"\
+    , statistics.stdev(runtimes))"
+docker:
+  base_image: docker.io/sweperf/sweperf:matplotlib__matplotlib-18756
+  human_image: docker.io/sweperf/sweperf_annotate:matplotlib__matplotlib-18756
+  llm_image: PLACEHOLDER
+  commands:
+    run_base: docker run --rm --name bench_{id}_base --mount type=bind,src=<WORKLOAD_PY>,dst=/tmp/workload.py
+      {base_image} /bin/bash -lc 'python /tmp/workload.py' 2>&1
+    run_human: docker run --rm --name bench_{id}_human --mount type=bind,src=<WORKLOAD_PY>,dst=/tmp/workload.py
+      {human_image} /bin/bash -lc 'chmod +x /perf.sh && /perf.sh && python /tmp/workload.py'
+      2>&1
+    run_llm: echo 'LLM image not available yet for {id}. Please fill docker.llm_image.'
+metrics:
+  reducer: mean_std
+  parse_regex:
+    mean: (?i)\bMean:\s*([0-9.]+)
+    std: (?i)(Std Dev|SD):\s*([0-9.]+)
+notes:
+  user_notes: 'Before Mean: 6.297361067787278
+
+    Before SD: 0.008405692632438719
+
+    After Mean: 0.8469261301681399
+
+    After SD: 0.0024153902252698235
+
+    Improvement: -86.55%'
+  mike_notes: ''
+meta:
+  num_covering_tests: '10'

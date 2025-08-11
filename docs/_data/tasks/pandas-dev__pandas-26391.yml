@@ -1,0 +1,52 @@
+id: pandas-dev__pandas-26391
+status:
+  human: APPROVED
+  llm: COMING_SOON
+comparison:
+  llm_better: COMING_SOON
+repo:
+  org: pandas-dev
+  name: pandas
+  url: https://github.com/pandas-dev/pandas
+  pull_request: https://github.com/pandas-dev/pandas/pull/26391
+  base_commit: 612c24433b8486eb6b6b0013354dd6d6a296c100
+  created_at: '2019-05-14 15:16:05'
+  version: '0.24'
+workload:
+  language: python
+  code: "\nimport timeit\nimport statistics\n\nimport pandas as pd\nimport numpy as\
+    \ np\n\nN = 10**7\n\ndef setup():\n    global intv\n    left = np.append(np.arange(N),\
+    \ np.array(0))\n    right = np.append(np.arange(1, N + 1), np.array(1))\n    intv\
+    \ = pd.IntervalIndex.from_arrays(left, right)\n    intv._engine\n\ndef workload():\n\
+    \    global intv\n    intv.is_unique\n\nruntimes = timeit.repeat(workload, number=1,\
+    \ repeat=10, setup=setup)\n\nprint(\"Mean:\", statistics.mean(runtimes))\nprint(\"\
+    Std Dev:\", statistics.stdev(runtimes))"
+docker:
+  base_image: docker.io/sweperf/sweperf:pandas-dev__pandas-26391
+  human_image: docker.io/sweperf/sweperf_annotate:pandas-dev__pandas-26391
+  llm_image: PLACEHOLDER
+  commands:
+    run_base: docker run --rm --name bench_{id}_base --mount type=bind,src=<WORKLOAD_PY>,dst=/tmp/workload.py
+      {base_image} /bin/bash -lc 'python /tmp/workload.py' 2>&1
+    run_human: docker run --rm --name bench_{id}_human --mount type=bind,src=<WORKLOAD_PY>,dst=/tmp/workload.py
+      {human_image} /bin/bash -lc 'chmod +x /perf.sh && /perf.sh && python /tmp/workload.py'
+      2>&1
+    run_llm: echo 'LLM image not available yet for {id}. Please fill docker.llm_image.'
+metrics:
+  reducer: mean_std
+  parse_regex:
+    mean: (?i)\bMean:\s*([0-9.]+)
+    std: (?i)(Std Dev|SD):\s*([0-9.]+)
+notes:
+  user_notes: 'Before Mean: 3.7112313087855
+
+    Before SD: 0.06533191700371768
+
+    After Mean: 1.3447206930839457
+
+    After SD: 0.012382774332785767
+
+    Improvement: -63.77%'
+  mike_notes: ''
+meta:
+  num_covering_tests: '455'

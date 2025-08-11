@@ -1,0 +1,52 @@
+id: numpy__numpy-13250
+status:
+  human: APPROVED
+  llm: COMING_SOON
+comparison:
+  llm_better: COMING_SOON
+repo:
+  org: numpy
+  name: numpy
+  url: https://github.com/numpy/numpy
+  pull_request: https://github.com/numpy/numpy/pull/13250
+  base_commit: 6eb63c386f83143aa8d256f44ce850e4e2ee0785
+  created_at: '2019-04-02 16:18:52'
+  version: '1.16'
+workload:
+  language: python
+  code: "\n\nimport timeit\nimport statistics\n\nimport numpy as np\n\ndef pad_with(vector,\
+    \ pad_width, iaxis, kwargs):\n    pad_value = kwargs.get('padder', 10)\n    vector[:pad_width[0]]\
+    \ = pad_value\n    vector[-pad_width[1]:] = pad_value\n\nN = 10**4\nX = np.arange(N\
+    \ * N).reshape((N, N))\n\ndef workload():\n    Y = np.pad(X, 1000, pad_with, padder=100)\n\
+    \nruntimes = timeit.repeat(workload, number=1, repeat=100)\n\n# Print runtime\
+    \ mean and std deviation.\nprint(\"Mean:\", statistics.mean(runtimes))\nprint(\"\
+    Std Dev:\", statistics.stdev(runtimes))\n"
+docker:
+  base_image: docker.io/sweperf/sweperf:numpy__numpy-13250
+  human_image: docker.io/sweperf/sweperf_annotate:numpy__numpy-13250
+  llm_image: PLACEHOLDER
+  commands:
+    run_base: docker run --rm --name bench_{id}_base --mount type=bind,src=<WORKLOAD_PY>,dst=/tmp/workload.py
+      {base_image} /bin/bash -lc 'python /tmp/workload.py' 2>&1
+    run_human: docker run --rm --name bench_{id}_human --mount type=bind,src=<WORKLOAD_PY>,dst=/tmp/workload.py
+      {human_image} /bin/bash -lc 'chmod +x /perf.sh && /perf.sh && python /tmp/workload.py'
+      2>&1
+    run_llm: echo 'LLM image not available yet for {id}. Please fill docker.llm_image.'
+metrics:
+  reducer: mean_std
+  parse_regex:
+    mean: (?i)\bMean:\s*([0-9.]+)
+    std: (?i)(Std Dev|SD):\s*([0-9.]+)
+notes:
+  user_notes: 'Before Mean: 0.48118773045833224
+
+    Before SD: 0.002387945863296743
+
+    After Mean: 0.45599379107065036
+
+    After SD: 0.00444625643116332
+
+    Improvement: -5.24%'
+  mike_notes: ''
+meta:
+  num_covering_tests: '143'

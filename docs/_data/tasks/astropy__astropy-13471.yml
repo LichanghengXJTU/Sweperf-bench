@@ -1,0 +1,60 @@
+id: astropy__astropy-13471
+status:
+  human: APPROVED
+  llm: COMING_SOON
+comparison:
+  llm_better: COMING_SOON
+repo:
+  org: astropy
+  name: astropy
+  url: https://github.com/astropy/astropy
+  pull_request: https://github.com/astropy/astropy/pull/13471
+  base_commit: 31c6b608ec26b27fe61146699f2ffe8775474b43
+  created_at: '2022-07-21 16:33:37'
+  version: '5'
+workload:
+  language: python
+  code: "import timeit\nimport statistics\nimport astropy.io.fits\nimport astropy.units\
+    \ as u\nfrom astropy.coordinates import (\n    EarthLocation, AltAz, SkyCoord,\
+    \ CoordinateAttribute, BaseCoordinateFrame,\n    UnitSphericalRepresentation,\
+    \ RepresentationMapping,\n)\nfrom astropy.time import Time\n\ndef setup():\n \
+    \   global ExampleFrame, coord_attr, coord\n    class ExampleFrame(BaseCoordinateFrame):\n\
+    \        frame_specific_representation_info = {\n            UnitSphericalRepresentation:\
+    \ [\n                RepresentationMapping(\"lon\", \"fov_lon\"),\n          \
+    \      RepresentationMapping(\"lat\", \"fov_lat\"),\n            ]\n        }\n\
+    \        default_representation = UnitSphericalRepresentation\n        coord_attr\
+    \ = CoordinateAttribute(default=None, frame=AltAz)\n\n    loc = EarthLocation.of_site(\"\
+    Roque de los Muchachos\")\n    t = Time.now()\n    frame = AltAz(location=loc,\
+    \ obstime=t)\n    coord = SkyCoord(0 * u.deg, 0 * u.deg, frame=frame)\n\ndef workload():\n\
+    \    global ExampleFrame, coord\n    ExampleFrame(coord_attr=coord)\n\nruntimes\
+    \ = timeit.repeat(workload, number=10, repeat=2000, setup=setup)\n\nprint(\"Mean:\"\
+    , statistics.mean(runtimes[-1000:]))\nprint(\"Std Dev:\", statistics.stdev(runtimes[-1000:]))"
+docker:
+  base_image: docker.io/sweperf/sweperf:astropy__astropy-13471
+  human_image: docker.io/sweperf/sweperf_annotate:astropy__astropy-13471
+  llm_image: PLACEHOLDER
+  commands:
+    run_base: docker run --rm --name bench_{id}_base --mount type=bind,src=<WORKLOAD_PY>,dst=/tmp/workload.py
+      {base_image} /bin/bash -lc 'python /tmp/workload.py' 2>&1
+    run_human: docker run --rm --name bench_{id}_human --mount type=bind,src=<WORKLOAD_PY>,dst=/tmp/workload.py
+      {human_image} /bin/bash -lc 'chmod +x /perf.sh && /perf.sh && python /tmp/workload.py'
+      2>&1
+    run_llm: echo 'LLM image not available yet for {id}. Please fill docker.llm_image.'
+metrics:
+  reducer: mean_std
+  parse_regex:
+    mean: (?i)\bMean:\s*([0-9.]+)
+    std: (?i)(Std Dev|SD):\s*([0-9.]+)
+notes:
+  user_notes: 'Before Mean: 0.006661600690858904
+
+    Before SD: 7.498147441639642e-05
+
+    After Mean: 0.0001905392372282222
+
+    After SD: 4.710246969806216e-06
+
+    Improvement: -97.14%'
+  mike_notes: ''
+meta:
+  num_covering_tests: '6'

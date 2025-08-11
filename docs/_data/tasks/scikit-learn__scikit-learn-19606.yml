@@ -1,0 +1,59 @@
+id: scikit-learn__scikit-learn-19606
+status:
+  human: APPROVED
+  llm: COMING_SOON
+comparison:
+  llm_better: COMING_SOON
+repo:
+  org: scikit-learn
+  name: scikit-learn
+  url: https://github.com/scikit-learn/scikit-learn
+  pull_request: https://github.com/scikit-learn/scikit-learn/pull/19606
+  base_commit: 28ee486b44f8e7e6440f3439e7315ba1e6d35e43
+  created_at: '2021-03-03 12:52:04'
+  version: '1'
+workload:
+  language: python
+  code: "import timeit\nimport statistics\n\nfrom sklearn.linear_model import ElasticNet\n\
+    from sklearn.datasets import make_regression\nfrom sklearn.preprocessing import\
+    \ StandardScaler\nfrom sklearn.model_selection import train_test_split\nimport\
+    \ numpy as np\n\ndef _synth_regression_dataset(n_samples=100000, n_features=100,\n\
+    \                              dtype=np.float32):\n    X, y = make_regression(n_samples=n_samples,\
+    \ n_features=n_features,\n                           n_informative=n_features\
+    \ // 10, noise=50,\n                           random_state=0)\n    X = X.astype(dtype,\
+    \ copy=False)\n    X = StandardScaler().fit_transform(X)\n\n    X, X_val, y, y_val\
+    \ = train_test_split(X, y, test_size=0.1, random_state=0)\n    return X, X_val,\
+    \ y, y_val\n\nX, _, y, _ = _synth_regression_dataset(n_samples=5000, n_features=10000)\
+    \ \n\ndef setup():\n    global estimator\n    estimator = ElasticNet(precompute=False,\
+    \ alpha=100, random_state=0) \n\ndef workload():\n    estimator.fit(X, y)\n  \
+    \      \nruntimes = timeit.repeat(workload, number=1, repeat=20, setup=setup)\n\
+    \nprint(\"Mean:\", statistics.mean(runtimes))\nprint(\"Std Dev:\", statistics.stdev(runtimes))"
+docker:
+  base_image: docker.io/sweperf/sweperf:scikit-learn__scikit-learn-19606
+  human_image: docker.io/sweperf/sweperf_annotate:scikit-learn__scikit-learn-19606
+  llm_image: PLACEHOLDER
+  commands:
+    run_base: docker run --rm --name bench_{id}_base --mount type=bind,src=<WORKLOAD_PY>,dst=/tmp/workload.py
+      {base_image} /bin/bash -lc 'python /tmp/workload.py' 2>&1
+    run_human: docker run --rm --name bench_{id}_human --mount type=bind,src=<WORKLOAD_PY>,dst=/tmp/workload.py
+      {human_image} /bin/bash -lc 'chmod +x /perf.sh && /perf.sh && python /tmp/workload.py'
+      2>&1
+    run_llm: echo 'LLM image not available yet for {id}. Please fill docker.llm_image.'
+metrics:
+  reducer: mean_std
+  parse_regex:
+    mean: (?i)\bMean:\s*([0-9.]+)
+    std: (?i)(Std Dev|SD):\s*([0-9.]+)
+notes:
+  user_notes: 'Before Mean: 0.8195643452025252
+
+    Before SD: 0.04875772925680725
+
+    After Mean: 0.3215922302508261
+
+    After SD: 0.02205097062897235
+
+    Improvement: -60.76%'
+  mike_notes: ''
+meta:
+  num_covering_tests: '17'

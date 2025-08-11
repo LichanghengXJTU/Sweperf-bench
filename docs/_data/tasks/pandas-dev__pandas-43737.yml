@@ -1,0 +1,54 @@
+id: pandas-dev__pandas-43737
+status:
+  human: APPROVED
+  llm: COMING_SOON
+comparison:
+  llm_better: COMING_SOON
+repo:
+  org: pandas-dev
+  name: pandas
+  url: https://github.com/pandas-dev/pandas
+  pull_request: https://github.com/pandas-dev/pandas/pull/43737
+  base_commit: cd13e3a42d03f2c3f93b1de3e04352d01aac2241
+  created_at: '2021-09-25 11:07:44'
+  version: '1.3'
+workload:
+  language: python
+  code: "import timeit\nimport statistics\n\nimport pandas as pd\nimport numpy as\
+    \ np\n\ncols = 24\nrows = 120\n\ndf = pd.DataFrame(\n    np.random.randn(rows,\
+    \ cols),\n    columns=[f\"float_{i+1}\" for i in range(cols)],\n    index=[f\"\
+    row_{i+1}\" for i in range(rows)],\n)\n\ndef workload():\n    ttips = pd.DataFrame(\"\
+    abc\", index=df.index[::2], columns=df.columns[::2])\n    st = df.style.set_tooltips(ttips)\n\
+    \    st.hide_index(st.index[12:])\n    st.hide_columns(st.columns[12:])\n    st._render_html(True,\
+    \ True)\n\nruntimes = timeit.repeat(workload, number=5, repeat=25)\n\n# Print\
+    \ runtime mean and std deviation.\nprint(\"Mean:\", statistics.mean(runtimes))\n\
+    print(\"Std Dev:\", statistics.stdev(runtimes))\n"
+docker:
+  base_image: docker.io/sweperf/sweperf:pandas-dev__pandas-43737
+  human_image: docker.io/sweperf/sweperf_annotate:pandas-dev__pandas-43737
+  llm_image: PLACEHOLDER
+  commands:
+    run_base: docker run --rm --name bench_{id}_base --mount type=bind,src=<WORKLOAD_PY>,dst=/tmp/workload.py
+      {base_image} /bin/bash -lc 'python /tmp/workload.py' 2>&1
+    run_human: docker run --rm --name bench_{id}_human --mount type=bind,src=<WORKLOAD_PY>,dst=/tmp/workload.py
+      {human_image} /bin/bash -lc 'chmod +x /perf.sh && /perf.sh && python /tmp/workload.py'
+      2>&1
+    run_llm: echo 'LLM image not available yet for {id}. Please fill docker.llm_image.'
+metrics:
+  reducer: mean_std
+  parse_regex:
+    mean: (?i)\bMean:\s*([0-9.]+)
+    std: (?i)(Std Dev|SD):\s*([0-9.]+)
+notes:
+  user_notes: 'Before Mean: 0.38933681399328635
+
+    Before SD: 0.08381722276732702
+
+    After Mean: 0.33304644683841617
+
+    After SD: 0.054170085546546766
+
+    Improvement: -14.46%'
+  mike_notes: ''
+meta:
+  num_covering_tests: '7'

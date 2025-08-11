@@ -1,0 +1,73 @@
+id: scikit-learn__scikit-learn-24856
+status:
+  human: APPROVED
+  llm: COMING_SOON
+comparison:
+  llm_better: COMING_SOON
+repo:
+  org: scikit-learn
+  name: scikit-learn
+  url: https://github.com/scikit-learn/scikit-learn
+  pull_request: https://github.com/scikit-learn/scikit-learn/pull/24856
+  base_commit: f702e97907b69ebf47dc26398737fca7dd57faa2
+  created_at: '2022-11-07 20:11:30'
+  version: '1.2'
+workload:
+  language: python
+  code: "import os\nfrom urllib.request import urlretrieve\nfrom gzip import GzipFile\n\
+    import numpy as np\nimport pandas as pd\nfrom time import time\nfrom joblib import\
+    \ Memory\nfrom sklearn.model_selection import train_test_split\nfrom sklearn.metrics\
+    \ import accuracy_score, roc_auc_score\nfrom sklearn.ensemble import HistGradientBoostingClassifier\n\
+    from sklearn.ensemble._hist_gradient_boosting.utils import get_equivalent_estimator\n\
+    import timeit\nimport statistics\n\n# === Fixed configuration (replacing argparse)\
+    \ ===\nn_leaf_nodes = 31\nn_trees = 100\nlearning_rate = 1.0\nmax_bins = 255\n\
+    cache_loc = \"/tmp\"\n\nHERE = os.path.dirname(__file__)\nURL = \"https://archive.ics.uci.edu/ml/machine-learning-databases/00280/HIGGS.csv.gz\"\
+    \nm = Memory(location=cache_loc, mmap_mode=\"r\")\n\n@m.cache\ndef load_data():\n\
+    \    filename = os.path.join(HERE, URL.rsplit(\"/\", 1)[-1])\n    if not os.path.exists(filename):\n\
+    \        print(f\"Downloading {URL} to {filename} (2.6 GB)...\")\n        urlretrieve(URL,\
+    \ filename)\n        print(\"done.\")\n\n    print(f\"Parsing {filename}...\"\
+    )\n    tic = time()\n    with GzipFile(filename) as f:\n        df = pd.read_csv(f,\
+    \ header=None, dtype=np.float32)\n    toc = time()\n    print(f\"Loaded {df.values.nbytes\
+    \ / 1e9:0.3f} GB in {toc - tic:0.3f}s\")\n    return df\n\n\ndef fit(est, data_train,\
+    \ target_train, libname):\n    print(f\"Fitting a {libname} model...\")\n    tic\
+    \ = time()\n    est.fit(data_train, target_train)\n    toc = time()\n    print(f\"\
+    fitted in {toc - tic:.3f}s\")\n\ndf = load_data()\ntarget = df.values[:, 0]\n\
+    data = np.ascontiguousarray(df.values[:, 1:])\ndata_train, data_test, target_train,\
+    \ target_test = train_test_split(\n    data, target, test_size=0.2, random_state=0\n\
+    )\n\nn_samples, n_features = data_train.shape\n\ndef workload():\n    interaction_cst\
+    \ = [[i] for i in range(n_features)]\n    base_est = HistGradientBoostingClassifier(\n\
+    \        loss=\"log_loss\",\n        learning_rate=learning_rate,\n        max_iter=n_trees,\n\
+    \        max_bins=max_bins,\n        max_leaf_nodes=n_leaf_nodes,\n        early_stopping=False,\n\
+    \        random_state=0,\n        verbose=0,\n        interaction_cst=interaction_cst,\n\
+    \    )\n    fit(base_est, data_train, target_train, \"sklearn\")\n\nruntimes =\
+    \ timeit.repeat(workload, number=1, repeat=3)\n\nprint(\"Mean:\", statistics.mean(runtimes))\n\
+    print(\"Std Dev:\", statistics.stdev(runtimes))\n"
+docker:
+  base_image: docker.io/sweperf/sweperf:scikit-learn__scikit-learn-24856
+  human_image: docker.io/sweperf/sweperf_annotate:scikit-learn__scikit-learn-24856
+  llm_image: PLACEHOLDER
+  commands:
+    run_base: docker run --rm --name bench_{id}_base --mount type=bind,src=<WORKLOAD_PY>,dst=/tmp/workload.py
+      {base_image} /bin/bash -lc 'python /tmp/workload.py' 2>&1
+    run_human: docker run --rm --name bench_{id}_human --mount type=bind,src=<WORKLOAD_PY>,dst=/tmp/workload.py
+      {human_image} /bin/bash -lc 'chmod +x /perf.sh && /perf.sh && python /tmp/workload.py'
+      2>&1
+    run_llm: echo 'LLM image not available yet for {id}. Please fill docker.llm_image.'
+metrics:
+  reducer: mean_std
+  parse_regex:
+    mean: (?i)\bMean:\s*([0-9.]+)
+    std: (?i)(Std Dev|SD):\s*([0-9.]+)
+notes:
+  user_notes: 'Before Mean: 27.662535973339498
+
+    Before SD: 0.08357566468774068
+
+    After Mean: 18.680509316017076
+
+    After SD: 0.06609260827051137
+
+    Improvement: -32.47%'
+  mike_notes: ''
+meta:
+  num_covering_tests: '7'

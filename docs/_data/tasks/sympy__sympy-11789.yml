@@ -1,0 +1,52 @@
+id: sympy__sympy-11789
+status:
+  human: APPROVED
+  llm: COMING_SOON
+comparison:
+  llm_better: COMING_SOON
+repo:
+  org: sympy
+  name: sympy
+  url: https://github.com/sympy/sympy
+  pull_request: https://github.com/sympy/sympy/pull/11789
+  base_commit: 0e27e649e72b222e900b2d81e47c689585cd7c67
+  created_at: '2016-10-31 4:42:57'
+  version: '1'
+workload:
+  language: python
+  code: "import timeit\nimport statistics\nfrom sympy.assumptions.satask import satask\n\
+    from sympy.assumptions import Q\nfrom sympy.abc import x\nfrom sympy import symbols\n\
+    \nfrom sympy.core.cache import clear_cache\n\ndef setup():\n    global x\n   \
+    \ clear_cache()\n    x = symbols('x', real=True)\n\ndef workload():\n    global\
+    \ x\n    _ = satask(Q.positive(x**2), Q.real(x))\n\nruntimes = timeit.repeat(workload,\
+    \ number=1, repeat=200, setup=setup)\n\nprint(\"Mean:\", statistics.mean(runtimes[-100:]))\n\
+    print(\"Std Dev:\", statistics.stdev(runtimes[-100:]))"
+docker:
+  base_image: docker.io/sweperf/sweperf:sympy__sympy-11789
+  human_image: docker.io/sweperf/sweperf_annotate:sympy__sympy-11789
+  llm_image: PLACEHOLDER
+  commands:
+    run_base: docker run --rm --name bench_{id}_base --mount type=bind,src=<WORKLOAD_PY>,dst=/tmp/workload.py
+      {base_image} /bin/bash -lc 'python /tmp/workload.py' 2>&1
+    run_human: docker run --rm --name bench_{id}_human --mount type=bind,src=<WORKLOAD_PY>,dst=/tmp/workload.py
+      {human_image} /bin/bash -lc 'chmod +x /perf.sh && /perf.sh && python /tmp/workload.py'
+      2>&1
+    run_llm: echo 'LLM image not available yet for {id}. Please fill docker.llm_image.'
+metrics:
+  reducer: mean_std
+  parse_regex:
+    mean: (?i)\bMean:\s*([0-9.]+)
+    std: (?i)(Std Dev|SD):\s*([0-9.]+)
+notes:
+  user_notes: 'Before Mean: 0.4616790819779271
+
+    Before SD: 0.001106821776818378
+
+    After Mean: 0.021577581771998665
+
+    After SD: 0.00010448021761237926
+
+    Improvement: -95.33%'
+  mike_notes: ''
+meta:
+  num_covering_tests: '7'

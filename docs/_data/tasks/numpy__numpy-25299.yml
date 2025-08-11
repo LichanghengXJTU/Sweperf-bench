@@ -1,0 +1,54 @@
+id: numpy__numpy-25299
+status:
+  human: APPROVED
+  llm: COMING_SOON
+comparison:
+  llm_better: COMING_SOON
+repo:
+  org: numpy
+  name: numpy
+  url: https://github.com/numpy/numpy
+  pull_request: https://github.com/numpy/numpy/pull/25299
+  base_commit: 44570a8fe8263c8de2463c969324643b9af2feec
+  created_at: '2023-12-02 20:37:41'
+  version: '1.26'
+workload:
+  language: python
+  code: "import numpy as np\nfrom numpy.polynomial import polyutils as pu\n\nfrom\
+    \ numpy.testing import (\n    assert_raises, assert_equal, assert_,\n)\n\nimport\
+    \ functools\nimport timeit\nimport statistics\n\ndef setup():\n    global testf,\
+    \ td, test_wrapper\n\n    def test_wrapper(testf, td):\n        try:\n       \
+    \     testf(td)\n            assert False\n        except ValueError:\n      \
+    \      pass\n\n    testf = pu.as_series\n    td = [[]]\n\ndef workload():\n  \
+    \  global testf, td, test_wrapper\n\n    test_wrapper(testf, td)\n\n\nruntimes\
+    \ = timeit.repeat(workload, number=1000, repeat=100, setup=setup)\n\nprint(\"\
+    Mean:\", statistics.mean(runtimes))\nprint(\"Std Dev:\", statistics.stdev(runtimes))"
+docker:
+  base_image: docker.io/sweperf/sweperf:numpy__numpy-25299
+  human_image: docker.io/sweperf/sweperf_annotate:numpy__numpy-25299
+  llm_image: PLACEHOLDER
+  commands:
+    run_base: docker run --rm --name bench_{id}_base --mount type=bind,src=<WORKLOAD_PY>,dst=/tmp/workload.py
+      {base_image} /bin/bash -lc 'python /tmp/workload.py' 2>&1
+    run_human: docker run --rm --name bench_{id}_human --mount type=bind,src=<WORKLOAD_PY>,dst=/tmp/workload.py
+      {human_image} /bin/bash -lc 'chmod +x /perf.sh && /perf.sh && python /tmp/workload.py'
+      2>&1
+    run_llm: echo 'LLM image not available yet for {id}. Please fill docker.llm_image.'
+metrics:
+  reducer: mean_std
+  parse_regex:
+    mean: (?i)\bMean:\s*([0-9.]+)
+    std: (?i)(Std Dev|SD):\s*([0-9.]+)
+notes:
+  user_notes: 'Before Mean: 0.0009941416096989997
+
+    Before SD: 1.2385289029799862e-05
+
+    After Mean: 0.0008095845507341437
+
+    After SD: 9.452404921049272e-06
+
+    Improvement: -18.56%'
+  mike_notes: ''
+meta:
+  num_covering_tests: '10'

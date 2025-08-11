@@ -1,0 +1,61 @@
+id: pandas-dev__pandas-54510
+status:
+  human: APPROVED
+  llm: COMING_SOON
+comparison:
+  llm_better: COMING_SOON
+repo:
+  org: pandas-dev
+  name: pandas
+  url: https://github.com/pandas-dev/pandas
+  pull_request: https://github.com/pandas-dev/pandas/pull/54510
+  base_commit: 62227895d26bfccfc78260ce0dddaebeab0672fe
+  created_at: '2023-08-12 7:35:54'
+  version: '2'
+workload:
+  language: python
+  code: "import pandas as pd\nimport numpy as np\nimport timeit\nimport statistics\n\
+    \ndef setup():\n    global left, right\n    N = 500_000\n\n    keys = pd.Series([f\"\
+    key_{i}\" for i in range(N)], dtype=\"string[pyarrow]\")\n\n    left = pd.DataFrame({\"\
+    key\": keys, \"val\": np.random.randn(N)})\n    right = pd.DataFrame({\"key\"\
+    : keys.sample(frac=0.8, random_state=42).reset_index(drop=True)})\n\ndef workload():\n\
+    \    global left, right\n    \n    _ = left.merge(right, on=\"key\", how=\"inner\"\
+    )\n\nruntimes = timeit.repeat(workload, number=1, repeat=10, setup=setup)\nprint(\"\
+    Mean:\", statistics.mean(runtimes))\nprint(\"Std Dev:\", statistics.stdev(runtimes))"
+docker:
+  base_image: docker.io/sweperf/sweperf:pandas-dev__pandas-54510
+  human_image: docker.io/sweperf/sweperf_annotate:pandas-dev__pandas-54510
+  llm_image: PLACEHOLDER
+  commands:
+    run_base: docker run --rm --name bench_{id}_base --mount type=bind,src=<WORKLOAD_PY>,dst=/tmp/workload.py
+      {base_image} /bin/bash -lc 'python /tmp/workload.py' 2>&1
+    run_human: docker run --rm --name bench_{id}_human --mount type=bind,src=<WORKLOAD_PY>,dst=/tmp/workload.py
+      {human_image} /bin/bash -lc 'chmod +x /perf.sh && /perf.sh && python /tmp/workload.py'
+      2>&1
+    run_llm: echo 'LLM image not available yet for {id}. Please fill docker.llm_image.'
+metrics:
+  reducer: mean_std
+  parse_regex:
+    mean: (?i)\bMean:\s*([0-9.]+)
+    std: (?i)(Std Dev|SD):\s*([0-9.]+)
+notes:
+  user_notes: 'Mean: 0.31490139169836767
+
+    Std Dev: 0.021255957258046118
+
+    Mean: 0.1377519874004065
+
+    Std Dev: 0.016394287152663913
+
+    Improvement:-56.26%'
+  mike_notes: 'Mean: 0.31490139169836767
+
+    Std Dev: 0.021255957258046118
+
+    Mean: 0.1377519874004065
+
+    Std Dev: 0.016394287152663913
+
+    Improvement:-56.26%'
+meta:
+  num_covering_tests: '41'

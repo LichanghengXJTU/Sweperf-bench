@@ -1,0 +1,55 @@
+id: scikit-learn__scikit-learn-15615
+status:
+  human: APPROVED
+  llm: COMING_SOON
+comparison:
+  llm_better: COMING_SOON
+repo:
+  org: scikit-learn
+  name: scikit-learn
+  url: https://github.com/scikit-learn/scikit-learn
+  pull_request: https://github.com/scikit-learn/scikit-learn/pull/15615
+  base_commit: db6c12fc117500a751799a3082d1503b65183920
+  created_at: '2019-11-13 10:56:09'
+  version: '0.22'
+workload:
+  language: python
+  code: "import timeit\nimport statistics\n\nimport numpy as np\nfrom sklearn.datasets\
+    \ import fetch_california_housing\nfrom sklearn.metrics.pairwise import nan_euclidean_distances\n\
+    import pandas as pd\n\ncalhousing = fetch_california_housing()\n\nX = pd.DataFrame(calhousing.data,\
+    \ columns=calhousing.feature_names)\ny = pd.Series(calhousing.target, name='house_value')\n\
+    \nrng = np.random.RandomState(42)\n\ndensity = 4  # one in 10 values will be NaN\n\
+    \nmask = rng.randint(density, size=X.shape) == 0\nX_na = X.copy()\nX_na.values[mask]\
+    \ = np.nan\n\ndef workload():\n    nan_euclidean_distances(X_na)\n    \nruntimes\
+    \ = timeit.repeat(workload, number=1, repeat=5)\n\n# Print runtime mean and std\
+    \ deviation.\nprint(\"Mean:\", statistics.mean(runtimes))\nprint(\"Std Dev:\"\
+    , statistics.stdev(runtimes))\n"
+docker:
+  base_image: docker.io/sweperf/sweperf:scikit-learn__scikit-learn-15615
+  human_image: docker.io/sweperf/sweperf_annotate:scikit-learn__scikit-learn-15615
+  llm_image: PLACEHOLDER
+  commands:
+    run_base: docker run --rm --name bench_{id}_base --mount type=bind,src=<WORKLOAD_PY>,dst=/tmp/workload.py
+      {base_image} /bin/bash -lc 'python /tmp/workload.py' 2>&1
+    run_human: docker run --rm --name bench_{id}_human --mount type=bind,src=<WORKLOAD_PY>,dst=/tmp/workload.py
+      {human_image} /bin/bash -lc 'chmod +x /perf.sh && /perf.sh && python /tmp/workload.py'
+      2>&1
+    run_llm: echo 'LLM image not available yet for {id}. Please fill docker.llm_image.'
+metrics:
+  reducer: mean_std
+  parse_regex:
+    mean: (?i)\bMean:\s*([0-9.]+)
+    std: (?i)(Std Dev|SD):\s*([0-9.]+)
+notes:
+  user_notes: 'Before Mean: 17.93120629497571
+
+    Before SD: 0.03133612272437449
+
+    After Mean: 15.607489893212914
+
+    After SD: 0.09166748938761221
+
+    Improvement: -12.96%'
+  mike_notes: ''
+meta:
+  num_covering_tests: '2'

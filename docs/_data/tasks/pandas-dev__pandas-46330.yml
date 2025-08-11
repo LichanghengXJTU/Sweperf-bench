@@ -1,0 +1,56 @@
+id: pandas-dev__pandas-46330
+status:
+  human: APPROVED
+  llm: COMING_SOON
+comparison:
+  llm_better: COMING_SOON
+repo:
+  org: pandas-dev
+  name: pandas
+  url: https://github.com/pandas-dev/pandas
+  pull_request: https://github.com/pandas-dev/pandas/pull/46330
+  base_commit: 663147edd35bc3e0362f7d637c8d5f5e597f961b
+  created_at: '2022-03-11 20:59:28'
+  version: '1.4'
+workload:
+  language: python
+  code: "import timeit\nimport statistics\n\nimport numpy as np\nimport pandas as\
+    \ pd\n\nnlevels = 2\nmi1 = pd.MultiIndex.from_arrays([range(1000000)] * nlevels)\n\
+    mi2 = pd.MultiIndex.from_product([range(1000)] * nlevels)\ndf1 = pd.DataFrame(np.random.randn(len(mi1)),\
+    \ index=mi1)\ndf2 = pd.DataFrame(np.random.randn(len(mi2)), index=mi2)\ndfs =\
+    \ [df1, df2]\n\ntgt_slice = slice(200, 800)\ntgt_null_slice = slice(None)\ntgt_list\
+    \ = list(range(0, 1000, 10))\ntgt_scalar = 500\n\ndef workload():\n    for df\
+    \ in dfs:\n        target1 = (tgt_null_slice, tgt_slice)\n        df.loc[target1,\
+    \ :]\n        \n        target2 = tuple([tgt_list] * nlevels)\n        df.loc[target2,\
+    \ :]\n        \nruntimes = timeit.repeat(workload, number=1, repeat=100)\n\n#\
+    \ Print runtime mean and std deviation.\nprint(\"Mean:\", statistics.mean(runtimes))\n\
+    print(\"Std Dev:\", statistics.stdev(runtimes))\n"
+docker:
+  base_image: docker.io/sweperf/sweperf:pandas-dev__pandas-46330
+  human_image: docker.io/sweperf/sweperf_annotate:pandas-dev__pandas-46330
+  llm_image: PLACEHOLDER
+  commands:
+    run_base: docker run --rm --name bench_{id}_base --mount type=bind,src=<WORKLOAD_PY>,dst=/tmp/workload.py
+      {base_image} /bin/bash -lc 'python /tmp/workload.py' 2>&1
+    run_human: docker run --rm --name bench_{id}_human --mount type=bind,src=<WORKLOAD_PY>,dst=/tmp/workload.py
+      {human_image} /bin/bash -lc 'chmod +x /perf.sh && /perf.sh && python /tmp/workload.py'
+      2>&1
+    run_llm: echo 'LLM image not available yet for {id}. Please fill docker.llm_image.'
+metrics:
+  reducer: mean_std
+  parse_regex:
+    mean: (?i)\bMean:\s*([0-9.]+)
+    std: (?i)(Std Dev|SD):\s*([0-9.]+)
+notes:
+  user_notes: 'Before Mean: 0.4209077364415862
+
+    Before SD: 0.002315129631281091
+
+    After Mean: 0.06297278098820243
+
+    After SD: 0.0016829426487888956
+
+    Improvement: -85.04%'
+  mike_notes: ''
+meta:
+  num_covering_tests: '890'

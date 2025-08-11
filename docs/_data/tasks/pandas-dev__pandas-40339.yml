@@ -1,0 +1,58 @@
+id: pandas-dev__pandas-40339
+status:
+  human: APPROVED
+  llm: COMING_SOON
+comparison:
+  llm_better: COMING_SOON
+repo:
+  org: pandas-dev
+  name: pandas
+  url: https://github.com/pandas-dev/pandas
+  pull_request: https://github.com/pandas-dev/pandas/pull/40339
+  base_commit: 93c52e4e1d172512b32e0e76e9b09c0cf76daf21
+  created_at: '2021-03-10 1:55:08'
+  version: '1.2'
+workload:
+  language: python
+  code: "import timeit\nimport statistics\n\nimport numpy as np\nimport pandas as\
+    \ pd\nimport string\n\nm = 100\nn = 1000\n\ndfs = []\nfor dtype in [\"int\", \"\
+    category\"]:\n    levels = np.arange(m)\n    index = pd.MultiIndex.from_product([levels]\
+    \ * 2)\n    columns = np.arange(n)\n    if dtype == \"int\":\n        values =\
+    \ np.arange(m * m * n).reshape(m * m, n)\n    else:\n        n = 50\n        columns\
+    \ = columns[:n]\n        indices = np.random.randint(0, 52, size=(m * m, n))\n\
+    \        values = np.take(list(string.ascii_letters), indices)\n        values\
+    \ = [pd.Categorical(v) for v in values.T]\n        \n    df = pd.DataFrame(values,\
+    \ index, columns)\n    df2 = df.iloc[:-1]\n\n    dfs.extend([\n        df, df2\n\
+    \    ])\n\ndef workload():\n    for df in dfs:\n        df.unstack()\n\nruntimes\
+    \ = timeit.repeat(workload, number=1, repeat=100)\n\n# Print runtime mean and\
+    \ std deviation.\nprint(\"Mean:\", statistics.mean(runtimes))\nprint(\"Std Dev:\"\
+    , statistics.stdev(runtimes))\n"
+docker:
+  base_image: docker.io/sweperf/sweperf:pandas-dev__pandas-40339
+  human_image: docker.io/sweperf/sweperf_annotate:pandas-dev__pandas-40339
+  llm_image: PLACEHOLDER
+  commands:
+    run_base: docker run --rm --name bench_{id}_base --mount type=bind,src=<WORKLOAD_PY>,dst=/tmp/workload.py
+      {base_image} /bin/bash -lc 'python /tmp/workload.py' 2>&1
+    run_human: docker run --rm --name bench_{id}_human --mount type=bind,src=<WORKLOAD_PY>,dst=/tmp/workload.py
+      {human_image} /bin/bash -lc 'chmod +x /perf.sh && /perf.sh && python /tmp/workload.py'
+      2>&1
+    run_llm: echo 'LLM image not available yet for {id}. Please fill docker.llm_image.'
+metrics:
+  reducer: mean_std
+  parse_regex:
+    mean: (?i)\bMean:\s*([0-9.]+)
+    std: (?i)(Std Dev|SD):\s*([0-9.]+)
+notes:
+  user_notes: 'Before Mean: 0.47638923782040365
+
+    Before SD: 0.002922797829821111
+
+    After Mean: 0.3948411296005361
+
+    After SD: 0.0016264068592412304
+
+    Improvement: -17.12%'
+  mike_notes: ''
+meta:
+  num_covering_tests: '196'

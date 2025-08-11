@@ -1,0 +1,89 @@
+id: pydata__xarray-7374
+status:
+  human: APPROVED
+  llm: COMING_SOON
+comparison:
+  llm_better: COMING_SOON
+repo:
+  org: pydata
+  name: xarray
+  url: https://github.com/pydata/xarray
+  pull_request: https://github.com/pydata/xarray/pull/7374
+  base_commit: 17933e7654d5502c2a580b1433c585241f915c18
+  created_at: '2022-12-11 16:01:05'
+  version: '2022.09'
+workload:
+  language: python
+  code: "\nimport timeit\nimport statistics\n\nimport xarray as xr\nimport numpy as\
+    \ np\nfrom dataclasses import dataclass\nimport os\n\n@dataclass\nclass PerformanceBackendArray(xr.backends.BackendArray):\n\
+    \    filename_or_obj: str | os.PathLike | None\n    shape: tuple[int, ...]\n \
+    \   dtype: np.dtype\n    lock: xr.backends.locks.SerializableLock\n\n    def __getitem__(self,\
+    \ key: tuple):\n        return xr.core.indexing.explicit_indexing_adapter(\n \
+    \           key,\n            self.shape,\n            xr.core.indexing.IndexingSupport.BASIC,\n\
+    \            self._raw_indexing_method,\n        )\n\n    def _raw_indexing_method(self,\
+    \ key: tuple):\n        raise NotImplementedError\n\n@dataclass\nclass PerformanceStore(xr.backends.common.AbstractWritableDataStore):\n\
+    \    manager: xr.backends.CachingFileManager\n    mode: str | None = None\n  \
+    \  lock: xr.backends.locks.SerializableLock | None = None\n    autoclose: bool\
+    \ = False\n\n    def __post_init__(self):\n        self.filename = self.manager._args[0]\n\
+    \n    @classmethod\n    def open(\n        cls,\n        filename: str | os.PathLike\
+    \ | None,\n        mode: str = \"r\",\n        lock: xr.backends.locks.SerializableLock\
+    \ | None = None,\n        autoclose: bool = False,\n    ):\n        if lock is\
+    \ None:\n            if mode == \"r\":\n                locker = xr.backends.locks.SerializableLock()\n\
+    \            else:\n                locker = xr.backends.locks.SerializableLock()\n\
+    \        else:\n            locker = lock\n\n        manager = xr.backends.CachingFileManager(\n\
+    \            xr.backends.DummyFileManager,\n            filename,\n          \
+    \  mode=mode,\n        )\n        return cls(manager, mode=mode, lock=locker,\
+    \ autoclose=autoclose)\n\n    def load(self) -> tuple:\n        \"\"\"\n     \
+    \   Load a bunch of test data quickly.\n\n        Normally this method would've\
+    \ opened a file and parsed it.\n        \"\"\"\n        n_variables = 2000\n\n\
+    \        # Important to have a shape and dtype for lazy loading.\n        shape\
+    \ = (1,)\n        dtype = np.dtype(int)\n        variables = {\n            f\"\
+    long_variable_name_{v}\": xr.Variable(\n                data=PerformanceBackendArray(\n\
+    \                    self.filename, shape, dtype, self.lock\n                ),\n\
+    \                dims=(\"time\",),\n                fastpath=True,\n         \
+    \   )\n            for v in range(0, n_variables)\n        }\n        attributes\
+    \ = {}\n\n        return variables, attributes\n\nclass PerformanceBackend(xr.backends.BackendEntrypoint):\n\
+    \    def open_dataset(\n        self,\n        filename_or_obj: str | os.PathLike\
+    \ | None,\n        drop_variables: tuple[str] = None,\n        *,\n        mask_and_scale=True,\n\
+    \        decode_times=True,\n        concat_characters=True,\n        decode_coords=True,\n\
+    \        use_cftime=None,\n        decode_timedelta=None,\n        lock=None,\n\
+    \        **kwargs,\n    ) -> xr.Dataset:\n        filename_or_obj = xr.backends.common._normalize_path(filename_or_obj)\n\
+    \        store = PerformanceStore.open(filename_or_obj, lock=lock)\n\n       \
+    \ store_entrypoint = xr.backends.store.StoreBackendEntrypoint()\n\n        ds\
+    \ = store_entrypoint.open_dataset(\n            store,\n            mask_and_scale=mask_and_scale,\n\
+    \            decode_times=decode_times,\n            concat_characters=concat_characters,\n\
+    \            decode_coords=decode_coords,\n            drop_variables=drop_variables,\n\
+    \            use_cftime=use_cftime,\n            decode_timedelta=decode_timedelta,\n\
+    \        )\n        return ds\n\nengine = PerformanceBackend\n\ndef workload():\n\
+    \    global ds\n    xr.open_dataset(None, engine=engine, chunks=None)\n    \n\
+    runtimes = timeit.repeat(workload, number=1, repeat=100)\n\nprint(\"Mean:\", statistics.mean(runtimes))\n\
+    print(\"Std Dev:\", statistics.stdev(runtimes))\n"
+docker:
+  base_image: docker.io/sweperf/sweperf:pydata__xarray-7374
+  human_image: docker.io/sweperf/sweperf_annotate:pydata__xarray-7374
+  llm_image: PLACEHOLDER
+  commands:
+    run_base: docker run --rm --name bench_{id}_base --mount type=bind,src=<WORKLOAD_PY>,dst=/tmp/workload.py
+      {base_image} /bin/bash -lc 'python /tmp/workload.py' 2>&1
+    run_human: docker run --rm --name bench_{id}_human --mount type=bind,src=<WORKLOAD_PY>,dst=/tmp/workload.py
+      {human_image} /bin/bash -lc 'chmod +x /perf.sh && /perf.sh && python /tmp/workload.py'
+      2>&1
+    run_llm: echo 'LLM image not available yet for {id}. Please fill docker.llm_image.'
+metrics:
+  reducer: mean_std
+  parse_regex:
+    mean: (?i)\bMean:\s*([0-9.]+)
+    std: (?i)(Std Dev|SD):\s*([0-9.]+)
+notes:
+  user_notes: 'Before Mean: 0.1195119862013962
+
+    Before SD: 0.0007257318486401459
+
+    After Mean: 0.08353344883711543
+
+    After SD: 0.0005032881222342841
+
+    Improvement: -30.10%'
+  mike_notes: ''
+meta:
+  num_covering_tests: '55'

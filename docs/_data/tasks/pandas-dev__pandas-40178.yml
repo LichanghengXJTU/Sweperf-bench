@@ -1,0 +1,51 @@
+id: pandas-dev__pandas-40178
+status:
+  human: APPROVED
+  llm: COMING_SOON
+comparison:
+  llm_better: COMING_SOON
+repo:
+  org: pandas-dev
+  name: pandas
+  url: https://github.com/pandas-dev/pandas
+  pull_request: https://github.com/pandas-dev/pandas/pull/40178
+  base_commit: b835ca2fc2f772c27c914ae532cd32f8db69724a
+  created_at: '2021-03-02 20:03:53'
+  version: '1.2'
+workload:
+  language: python
+  code: "import timeit\nimport statistics\n\nimport numpy as np\nimport pandas as\
+    \ pd\n\nncols = 1000\nN = 1000\ndata = np.random.randn(N, ncols)\nlabels = np.random.randint(0,\
+    \ 100, size=N)\ndf = pd.DataFrame(data)\ndf_am = df._as_manager('array')\n\ndef\
+    \ workload():\n    df_am.groupby(labels).sum()\n\nruntimes = timeit.repeat(workload,\
+    \ number=5, repeat=100)\n\n# Print runtime mean and std deviation.\nprint(\"Mean:\"\
+    , statistics.mean(runtimes))\nprint(\"Std Dev:\", statistics.stdev(runtimes))\n"
+docker:
+  base_image: docker.io/sweperf/sweperf:pandas-dev__pandas-40178
+  human_image: docker.io/sweperf/sweperf_annotate:pandas-dev__pandas-40178
+  llm_image: PLACEHOLDER
+  commands:
+    run_base: docker run --rm --name bench_{id}_base --mount type=bind,src=<WORKLOAD_PY>,dst=/tmp/workload.py
+      {base_image} /bin/bash -lc 'python /tmp/workload.py' 2>&1
+    run_human: docker run --rm --name bench_{id}_human --mount type=bind,src=<WORKLOAD_PY>,dst=/tmp/workload.py
+      {human_image} /bin/bash -lc 'chmod +x /perf.sh && /perf.sh && python /tmp/workload.py'
+      2>&1
+    run_llm: echo 'LLM image not available yet for {id}. Please fill docker.llm_image.'
+metrics:
+  reducer: mean_std
+  parse_regex:
+    mean: (?i)\bMean:\s*([0-9.]+)
+    std: (?i)(Std Dev|SD):\s*([0-9.]+)
+notes:
+  user_notes: 'Before Mean: 0.2714030879706843
+
+    Before SD: 0.002376031133212636
+
+    After Mean: 0.23250550432188902
+
+    After SD: 0.0008436328771124457
+
+    Improvement: -14.33%'
+  mike_notes: ''
+meta:
+  num_covering_tests: '838'

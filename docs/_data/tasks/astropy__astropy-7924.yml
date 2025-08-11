@@ -1,0 +1,53 @@
+id: astropy__astropy-7924
+status:
+  human: APPROVED
+  llm: COMING_SOON
+comparison:
+  llm_better: COMING_SOON
+repo:
+  org: astropy
+  name: astropy
+  url: https://github.com/astropy/astropy
+  pull_request: https://github.com/astropy/astropy/pull/7924
+  base_commit: 1cb6af9ab04ae4208e3f02c0841fa7cec7b276c5
+  created_at: '2018-10-19 3:21:27'
+  version: '3'
+workload:
+  language: python
+  code: "import timeit\nimport statistics\n\nfrom astropy import units as u\nfrom\
+    \ astropy import coordinates as coord\n\ndef setup():\n    global rep, dif\n \
+    \   rep = coord.CartesianRepresentation([1., 2, 3] * u.kpc)\n    dif = coord.CartesianDifferential([1,\
+    \ 2, 3.] * u.km/u.s)\n\ndef workload():\n    dif._get_deriv_key(rep)\n    rep.with_differentials(dif)\n\
+    \    coord.ICRS(ra=1*u.deg, dec=2*u.deg, pm_ra_cosdec=1*u.mas/u.yr, pm_dec=2*u.mas/u.yr)\n\
+    \nruntimes = timeit.repeat(workload, number=5, repeat=1000, setup=setup)\n\n#\
+    \ Print runtime mean and std deviation.\nprint(\"Mean:\", statistics.mean(runtimes))\n\
+    print(\"Std Dev:\", statistics.stdev(runtimes))"
+docker:
+  base_image: docker.io/sweperf/sweperf:astropy__astropy-7924
+  human_image: docker.io/sweperf/sweperf_annotate:astropy__astropy-7924
+  llm_image: PLACEHOLDER
+  commands:
+    run_base: docker run --rm --name bench_{id}_base --mount type=bind,src=<WORKLOAD_PY>,dst=/tmp/workload.py
+      {base_image} /bin/bash -lc 'python /tmp/workload.py' 2>&1
+    run_human: docker run --rm --name bench_{id}_human --mount type=bind,src=<WORKLOAD_PY>,dst=/tmp/workload.py
+      {human_image} /bin/bash -lc 'chmod +x /perf.sh && /perf.sh && python /tmp/workload.py'
+      2>&1
+    run_llm: echo 'LLM image not available yet for {id}. Please fill docker.llm_image.'
+metrics:
+  reducer: mean_std
+  parse_regex:
+    mean: (?i)\bMean:\s*([0-9.]+)
+    std: (?i)(Std Dev|SD):\s*([0-9.]+)
+notes:
+  user_notes: 'Before Mean: 0.05212223191530211
+
+    Before SD: 0.00016936242503051265
+
+    After Mean: 0.0035399773694807664
+
+    After SD: 5.789122999412517e-05
+
+    Improvement: -93.21%'
+  mike_notes: ''
+meta:
+  num_covering_tests: '15'

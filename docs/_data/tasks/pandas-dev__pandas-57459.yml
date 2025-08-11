@@ -1,0 +1,57 @@
+id: pandas-dev__pandas-57459
+status:
+  human: APPROVED
+  llm: COMING_SOON
+comparison:
+  llm_better: COMING_SOON
+repo:
+  org: pandas-dev
+  name: pandas
+  url: https://github.com/pandas-dev/pandas
+  pull_request: https://github.com/pandas-dev/pandas/pull/57459
+  base_commit: c8646541e9a2e27cc14e550c722364ded1dcba5f
+  created_at: '2024-02-16 17:01:18'
+  version: '2.2'
+workload:
+  language: python
+  code: "import timeit\nimport statistics\n\nimport numpy as np\nimport pandas as\
+    \ pd\n\nn_rows, n_cols = 1_000_000, 10\n\n# construct dataframe with 2 blocks\n\
+    arr1 = np.random.randn(n_rows, n_cols // 2).astype(\"f8\")\narr2 = np.random.randn(n_rows,\
+    \ n_cols // 2).astype(\"f4\")\ndf = pd.concat([pd.DataFrame(arr1), pd.DataFrame(arr2)],\
+    \ axis=1, ignore_index=True)\ndf._consolidate_inplace()\n\narr1 = np.random.randn(n_rows,\
+    \ max(n_cols // 4, 3)).astype(\"f8\")\narr2 = np.random.randn(n_rows, n_cols //\
+    \ 2).astype(\"i8\")\narr3 = np.random.randn(n_rows, n_cols // 4).astype(\"f8\"\
+    )\ndf2 = pd.concat(\n    [pd.DataFrame(arr1), pd.DataFrame(arr2), pd.DataFrame(arr3)],\n\
+    \    axis=1,\n    ignore_index=True,\n)\ndf2._consolidate_inplace()\n\ndef workload():\n\
+    \    df > df2\n    \nruntimes = timeit.repeat(workload, number=5, repeat=100)\n\
+    \n# Print runtime mean and std deviation.\nprint(\"Mean:\", statistics.mean(runtimes))\n\
+    print(\"Std Dev:\", statistics.stdev(runtimes))\n"
+docker:
+  base_image: docker.io/sweperf/sweperf:pandas-dev__pandas-57459
+  human_image: docker.io/sweperf/sweperf_annotate:pandas-dev__pandas-57459
+  llm_image: PLACEHOLDER
+  commands:
+    run_base: docker run --rm --name bench_{id}_base --mount type=bind,src=<WORKLOAD_PY>,dst=/tmp/workload.py
+      {base_image} /bin/bash -lc 'python /tmp/workload.py' 2>&1
+    run_human: docker run --rm --name bench_{id}_human --mount type=bind,src=<WORKLOAD_PY>,dst=/tmp/workload.py
+      {human_image} /bin/bash -lc 'chmod +x /perf.sh && /perf.sh && python /tmp/workload.py'
+      2>&1
+    run_llm: echo 'LLM image not available yet for {id}. Please fill docker.llm_image.'
+metrics:
+  reducer: mean_std
+  parse_regex:
+    mean: (?i)\bMean:\s*([0-9.]+)
+    std: (?i)(Std Dev|SD):\s*([0-9.]+)
+notes:
+  user_notes: 'Before Mean: 0.052484076839173215
+
+    Before SD: 0.0009293868890646844
+
+    After Mean: 0.02248641977319494
+
+    After SD: 0.0006675973530832532
+
+    Improvement: -57.16%'
+  mike_notes: ''
+meta:
+  num_covering_tests: '360'

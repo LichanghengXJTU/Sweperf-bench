@@ -1,0 +1,65 @@
+id: pandas-dev__pandas-48620
+status:
+  human: APPROVED
+  llm: COMING_SOON
+comparison:
+  llm_better: COMING_SOON
+repo:
+  org: pandas-dev
+  name: pandas
+  url: https://github.com/pandas-dev/pandas
+  pull_request: https://github.com/pandas-dev/pandas/pull/48620
+  base_commit: 71fc89cd515c3c19230fbab64e979118858b808a
+  created_at: '2022-09-18 13:10:18'
+  version: '1.4'
+workload:
+  language: python
+  code: "import pandas as pd\nimport numpy as np\nimport timeit\nimport statistics\n\
+    \nfrom pandas import (\n    DataFrame,\n    Index,\n    MultiIndex,\n    Series,\n\
+    \    date_range,\n    period_range,\n)\n\ndef setup():\n    global df_nan, inplace\n\
+    \    \n    N = 10000\n    K = 10\n    key1 = Index([f\"i-{i}\" for i in range(N)],\
+    \ dtype=object).values.repeat(K)\n    key2 = Index([f\"i-{i}\" for i in range(N)],\
+    \ dtype=object).values.repeat(K)\n    df = DataFrame(\n        {\"key1\": key1,\
+    \ \"key2\": key2, \"value\": np.random.randn(N * K)}\n    )\n    df_nan = df.copy()\n\
+    \    df_nan.iloc[:10000, :] = np.nan\n    inplace = True\n\ndef workload():\n\
+    \    global df_nan, inplace\n    df_nan.drop_duplicates([\"key1\", \"key2\"],\
+    \ inplace=inplace)\n\nruntimes = timeit.repeat(workload, number=100, repeat=100,\
+    \ setup = setup)\nprint(\"Mean:\", statistics.mean(runtimes))\nprint(\"Std Dev:\"\
+    , statistics.stdev(runtimes))"
+docker:
+  base_image: docker.io/sweperf/sweperf:pandas-dev__pandas-48620
+  human_image: docker.io/sweperf/sweperf_annotate:pandas-dev__pandas-48620
+  llm_image: PLACEHOLDER
+  commands:
+    run_base: docker run --rm --name bench_{id}_base --mount type=bind,src=<WORKLOAD_PY>,dst=/tmp/workload.py
+      {base_image} /bin/bash -lc 'python /tmp/workload.py' 2>&1
+    run_human: docker run --rm --name bench_{id}_human --mount type=bind,src=<WORKLOAD_PY>,dst=/tmp/workload.py
+      {human_image} /bin/bash -lc 'chmod +x /perf.sh && /perf.sh && python /tmp/workload.py'
+      2>&1
+    run_llm: echo 'LLM image not available yet for {id}. Please fill docker.llm_image.'
+metrics:
+  reducer: mean_std
+  parse_regex:
+    mean: (?i)\bMean:\s*([0-9.]+)
+    std: (?i)(Std Dev|SD):\s*([0-9.]+)
+notes:
+  user_notes: 'Mean: 0.3943281996897713
+
+    Std Dev: 0.004631698892185727
+
+    Mean: 0.2457366318200002
+
+    Std Dev: 0.004188024143330044
+
+    Improvement:-37.68%'
+  mike_notes: 'Mean: 0.3943281996897713
+
+    Std Dev: 0.004631698892185727
+
+    Mean: 0.2457366318200002
+
+    Std Dev: 0.004188024143330044
+
+    Improvement:-37.68%'
+meta:
+  num_covering_tests: '905'

@@ -1,0 +1,54 @@
+id: pandas-dev__pandas-53806
+status:
+  human: APPROVED
+  llm: COMING_SOON
+comparison:
+  llm_better: COMING_SOON
+repo:
+  org: pandas-dev
+  name: pandas
+  url: https://github.com/pandas-dev/pandas
+  pull_request: https://github.com/pandas-dev/pandas/pull/53806
+  base_commit: af83376640ec7d86cb3166d0e01052dc6648bfdf
+  created_at: '2023-06-22 23:31:08'
+  version: '2'
+workload:
+  language: python
+  code: "\nimport timeit\nimport statistics\n\nimport pandas as pd\nimport numpy as\
+    \ np\n\nimport pandas as pd\nimport numpy as np\n\nmi = pd.MultiIndex.from_product([range(1000),\
+    \ range(1000)], names=[\"A\", \"B\"])\nser = pd.Series(np.random.randn(len(mi)),\
+    \ index=mi)\ndf = ser.to_frame(\"value\").reset_index()\n\ndef workload():\n \
+    \   df.sort_values([\"A\", \"B\"])\n    ser.sort_index()\n    ser.groupby([\"\
+    A\", \"B\"]).size()\n    ser.unstack()\n    \n# Drop first run due to numba JIT.\n\
+    runtimes = timeit.repeat(workload, number=1, repeat=10)\n\n# Print runtime mean\
+    \ and std deviation.\nprint(\"Mean:\", statistics.mean(runtimes))\nprint(\"Std\
+    \ Dev:\", statistics.stdev(runtimes))\n"
+docker:
+  base_image: docker.io/sweperf/sweperf:pandas-dev__pandas-53806
+  human_image: docker.io/sweperf/sweperf_annotate:pandas-dev__pandas-53806
+  llm_image: PLACEHOLDER
+  commands:
+    run_base: docker run --rm --name bench_{id}_base --mount type=bind,src=<WORKLOAD_PY>,dst=/tmp/workload.py
+      {base_image} /bin/bash -lc 'python /tmp/workload.py' 2>&1
+    run_human: docker run --rm --name bench_{id}_human --mount type=bind,src=<WORKLOAD_PY>,dst=/tmp/workload.py
+      {human_image} /bin/bash -lc 'chmod +x /perf.sh && /perf.sh && python /tmp/workload.py'
+      2>&1
+    run_llm: echo 'LLM image not available yet for {id}. Please fill docker.llm_image.'
+metrics:
+  reducer: mean_std
+  parse_regex:
+    mean: (?i)\bMean:\s*([0-9.]+)
+    std: (?i)(Std Dev|SD):\s*([0-9.]+)
+notes:
+  user_notes: 'Before Mean: 0.4465285333921202
+
+    Before SD: 0.012969629197610565
+
+    After Mean: 0.20101281231618487
+
+    After SD: 0.006873761304984899
+
+    Improvement: -54.98%'
+  mike_notes: ''
+meta:
+  num_covering_tests: '115'

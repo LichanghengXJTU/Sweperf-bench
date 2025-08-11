@@ -1,0 +1,55 @@
+id: scikit-learn__scikit-learn-15257
+status:
+  human: APPROVED
+  llm: COMING_SOON
+comparison:
+  llm_better: COMING_SOON
+repo:
+  org: scikit-learn
+  name: scikit-learn
+  url: https://github.com/scikit-learn/scikit-learn
+  pull_request: https://github.com/scikit-learn/scikit-learn/pull/15257
+  base_commit: d0d8f204675fd2718d373f8cde5ae12707521061
+  created_at: '2019-10-15 9:12:17'
+  version: '0.22'
+workload:
+  language: python
+  code: "import timeit\nimport statistics\n\nimport time\n\nimport numpy as np\nimport\
+    \ scipy.sparse as sp\n\nfrom sklearn.decomposition.nmf import _special_sparse_dot\n\
+    \ndef generate_values():\n    n_samples = 1000\n    n_features = 50\n    n_components\
+    \ = 30\n    rng = np.random.mtrand.RandomState(42)\n    X = rng.randn(n_samples,\
+    \ n_features)\n    np.clip(X, 0, None, out=X)\n    X_csr = sp.csr_matrix(X)\n\n\
+    \    W = np.abs(rng.randn(n_samples, n_components))\n    H = np.abs(rng.randn(n_components,\
+    \ n_features))\n    return W, H, X_csr\n\nW, H, X_csr = generate_values()\n\n\
+    def workload():\n    _special_sparse_dot(W, H, X_csr)\n    \nruntimes = timeit.repeat(workload,\
+    \ number=5, repeat=100)\n\n# Print runtime mean and std deviation.\nprint(\"Mean:\"\
+    , statistics.mean(runtimes))\nprint(\"Std Dev:\", statistics.stdev(runtimes))\n"
+docker:
+  base_image: docker.io/sweperf/sweperf:scikit-learn__scikit-learn-15257
+  human_image: docker.io/sweperf/sweperf_annotate:scikit-learn__scikit-learn-15257
+  llm_image: PLACEHOLDER
+  commands:
+    run_base: docker run --rm --name bench_{id}_base --mount type=bind,src=<WORKLOAD_PY>,dst=/tmp/workload.py
+      {base_image} /bin/bash -lc 'python /tmp/workload.py' 2>&1
+    run_human: docker run --rm --name bench_{id}_human --mount type=bind,src=<WORKLOAD_PY>,dst=/tmp/workload.py
+      {human_image} /bin/bash -lc 'chmod +x /perf.sh && /perf.sh && python /tmp/workload.py'
+      2>&1
+    run_llm: echo 'LLM image not available yet for {id}. Please fill docker.llm_image.'
+metrics:
+  reducer: mean_std
+  parse_regex:
+    mean: (?i)\bMean:\s*([0-9.]+)
+    std: (?i)(Std Dev|SD):\s*([0-9.]+)
+notes:
+  user_notes: 'Before Mean: 0.028397090557264165
+
+    Before SD: 0.002481386705322766
+
+    After Mean: 0.011407640946563333
+
+    After SD: 7.5239131894213e-05
+
+    Improvement: -59.83%'
+  mike_notes: ''
+meta:
+  num_covering_tests: '1'

@@ -1,0 +1,62 @@
+id: scikit-learn__scikit-learn-13290
+status:
+  human: APPROVED
+  llm: COMING_SOON
+comparison:
+  llm_better: COMING_SOON
+repo:
+  org: scikit-learn
+  name: scikit-learn
+  url: https://github.com/scikit-learn/scikit-learn
+  pull_request: https://github.com/scikit-learn/scikit-learn/pull/13290
+  base_commit: 3f25ea034cca6fa719dec024e0cbba608bce07e6
+  created_at: '2019-02-26 17:10:47'
+  version: '0.22'
+workload:
+  language: python
+  code: "import timeit\nimport statistics\n\nfrom sklearn.pipeline import make_pipeline\n\
+    from sklearn.preprocessing import PolynomialFeatures\nfrom sklearn.linear_model\
+    \ import SGDClassifier\n\nimport numpy as np\nfrom numpy.random import rand\n\n\
+    def build_x_y(ntrain, nfeat):\n    \"\"\"Creates a random classification problem\
+    \ with ntrain\n    rows and nfeat features.\"\"\"\n    X_train = np.empty((ntrain,\
+    \ nfeat))\n    X_train[:, :] = rand(ntrain, nfeat)[:, :]\n    X_trainsum = X_train.sum(axis=1)\n\
+    \    eps = rand(ntrain) - 0.5\n    X_trainsum_ = X_trainsum + eps\n    y_train\
+    \ = (X_trainsum_ >= X_trainsum).ravel().astype(int)\n    return X_train, y_train\n\
+    \n\n\ndef setup():\n    global model, Xs, ys\n    model = make_pipeline(PolynomialFeatures(),\
+    \ SGDClassifier())\n    X_init, y_init = build_x_y(1000, 50)\n    model.fit(X_init,\
+    \ y_init)\n    \n    Xs = []\n    ys = []\n    for i in range(100):\n        X_init,\
+    \ y_init = build_x_y(1000, 50)\n        Xs.append(X_init)\n        ys.append(y_init)\n\
+    \n\ndef workload():\n    global model, Xs, ys\n    for X, y in zip(Xs, ys):\n\
+    \        X2 = model.steps[0][1].transform(X)\n        model.steps[1][1].partial_fit(X2,\
+    \ y)\n    \nruntimes = timeit.repeat(workload, number=1, repeat=25, setup=setup)\n\
+    \n# Print runtime mean and std deviation.\nprint(\"Mean:\", statistics.mean(runtimes))\n\
+    print(\"Std Dev:\", statistics.stdev(runtimes))\n    "
+docker:
+  base_image: docker.io/sweperf/sweperf:scikit-learn__scikit-learn-13290
+  human_image: docker.io/sweperf/sweperf_annotate:scikit-learn__scikit-learn-13290
+  llm_image: PLACEHOLDER
+  commands:
+    run_base: docker run --rm --name bench_{id}_base --mount type=bind,src=<WORKLOAD_PY>,dst=/tmp/workload.py
+      {base_image} /bin/bash -lc 'python /tmp/workload.py' 2>&1
+    run_human: docker run --rm --name bench_{id}_human --mount type=bind,src=<WORKLOAD_PY>,dst=/tmp/workload.py
+      {human_image} /bin/bash -lc 'chmod +x /perf.sh && /perf.sh && python /tmp/workload.py'
+      2>&1
+    run_llm: echo 'LLM image not available yet for {id}. Please fill docker.llm_image.'
+metrics:
+  reducer: mean_std
+  parse_regex:
+    mean: (?i)\bMean:\s*([0-9.]+)
+    std: (?i)(Std Dev|SD):\s*([0-9.]+)
+notes:
+  user_notes: 'Before Mean: 1.660355247205589
+
+    Before SD: 0.10933688085412219
+
+    After Mean: 0.6277309200027957
+
+    After SD: 0.02564751600137387
+
+    Improvement: -62.19%'
+  mike_notes: ''
+meta:
+  num_covering_tests: '2'

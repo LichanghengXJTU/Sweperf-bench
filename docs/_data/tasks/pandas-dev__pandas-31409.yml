@@ -1,0 +1,52 @@
+id: pandas-dev__pandas-31409
+status:
+  human: APPROVED
+  llm: COMING_SOON
+comparison:
+  llm_better: COMING_SOON
+repo:
+  org: pandas-dev
+  name: pandas
+  url: https://github.com/pandas-dev/pandas
+  pull_request: https://github.com/pandas-dev/pandas/pull/31409
+  base_commit: cc1c406b3e3d4fe0ec9cd7ac5cc13275ffc111f2
+  created_at: '2020-01-29 2:13:52'
+  version: '0.25'
+workload:
+  language: python
+  code: "\nimport timeit\nimport statistics\n\nimport numpy as np\nimport pandas.core.common\
+    \ as com\n\ncast_func = com.cast_scalar_indexer\n\nkey1 = np.float64(17179869184.0)\n\
+    key2 = float(key1) * 2**30             \nkey3 = np.float64(np.iinfo(np.int64).max)\n\
+    keys = (key1, key2, key3)\n\ndef workload():\n    for key in keys:\n        cast_func(key)\n\
+    \nruntimes = timeit.repeat(workload, number=5, repeat=10**6)\n\n# Print runtime\
+    \ mean and std deviation.\nprint(\"Mean:\", statistics.mean(runtimes))\nprint(\"\
+    Std Dev:\", statistics.stdev(runtimes))\n"
+docker:
+  base_image: docker.io/sweperf/sweperf:pandas-dev__pandas-31409
+  human_image: docker.io/sweperf/sweperf_annotate:pandas-dev__pandas-31409
+  llm_image: PLACEHOLDER
+  commands:
+    run_base: docker run --rm --name bench_{id}_base --mount type=bind,src=<WORKLOAD_PY>,dst=/tmp/workload.py
+      {base_image} /bin/bash -lc 'python /tmp/workload.py' 2>&1
+    run_human: docker run --rm --name bench_{id}_human --mount type=bind,src=<WORKLOAD_PY>,dst=/tmp/workload.py
+      {human_image} /bin/bash -lc 'chmod +x /perf.sh && /perf.sh && python /tmp/workload.py'
+      2>&1
+    run_llm: echo 'LLM image not available yet for {id}. Please fill docker.llm_image.'
+metrics:
+  reducer: mean_std
+  parse_regex:
+    mean: (?i)\bMean:\s*([0-9.]+)
+    std: (?i)(Std Dev|SD):\s*([0-9.]+)
+notes:
+  user_notes: 'Before Mean: 1.2823379666835535e-05
+
+    Before SD: 2.148727906559973e-06
+
+    After Mean: 3.5168676389730535e-06
+
+    After SD: 1.1314908951533634e-06
+
+    Improvement: -72.57%'
+  mike_notes: ''
+meta:
+  num_covering_tests: '348'

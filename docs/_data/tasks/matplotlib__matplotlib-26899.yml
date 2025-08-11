@@ -1,0 +1,70 @@
+id: matplotlib__matplotlib-26899
+status:
+  human: APPROVED
+  llm: COMING_SOON
+comparison:
+  llm_better: COMING_SOON
+repo:
+  org: matplotlib
+  name: matplotlib
+  url: https://github.com/matplotlib/matplotlib
+  pull_request: https://github.com/matplotlib/matplotlib/pull/26899
+  base_commit: 7d2acfda30077403682d8beef5a3c340ac98a43b
+  created_at: '2023-09-23 15:38:45'
+  version: '3.8'
+workload:
+  language: python
+  code: "import timeit\nimport statistics\n\nimport matplotlib.pyplot as plt\nfrom\
+    \ mpl_toolkits.mplot3d import Axes3D\nfrom io import BytesIO\n\nfrom matplotlib.figure\
+    \ import Figure\nimport numpy as np\n\ndef setup():\n    global stream, fig_many\n\
+    \    # Random Number Generator.\n    rng = np.random.default_rng()\n    \n   \
+    \ # Constants.\n    figsize = (10, 6)\n    ncols = 3\n    nrows = 10\n    size\
+    \ = 100\n    size_total = ncols * nrows * size\n    \n    # Figure with many subplots.\n\
+    \    fig_many = Figure(figsize=figsize)\n    axs_many = fig_many.subplots(ncols=ncols,\
+    \ nrows=nrows)\n    \n    # Figure with many subplots and sharex='col'.\n    fig_many_sharex\
+    \ = Figure(figsize=figsize)\n    axs_many_sharex = fig_many_sharex.subplots(ncols=ncols,\
+    \ nrows=nrows, sharex='col')\n    \n    # Figure with a single axes.\n    fig_single\
+    \ = Figure(figsize=figsize)\n    ax_single = fig_single.subplots()\n    \n   \
+    \ # Helper-function: Generate random line-plots in the many subplots.\n    def\
+    \ generate_fig_many(axs):\n        for row in range(nrows):\n            for col\
+    \ in range(ncols):\n                ax = axs[row, col]\n                x = rng.normal(loc=row+1,\
+    \ scale=col+1, size=size)\n                y = rng.normal(loc=col+1, scale=row+1,\
+    \ size=size)\n                x = np.sort(x)\n                ax.plot(x, y);\n\
+    \                ax.set_yticks([])\n    \n    # Generate fig_many \n    generate_fig_many(axs=axs_many)\n\
+    \    fig_many.tight_layout()\n    \n    # Generate fig_many_sharex\n    generate_fig_many(axs=axs_many_sharex)\n\
+    \    fig_many_sharex.tight_layout()\n    \n    # Generate fig_single\n    x =\
+    \ rng.normal(size=size_total)\n    y = rng.normal(size=size_total)\n    x = np.sort(x)\n\
+    \    ax_single.plot(x, y);\n    fig_single.tight_layout()\n\n\ndef workload():\n\
+    \    global stream, fig_many\n    stream = BytesIO()\n    fig_many.savefig(stream,\
+    \ format='svg', bbox_inches='tight')\n    s = stream.getvalue()\n\nruntimes =\
+    \ timeit.repeat(workload, number=1, repeat=25, setup=setup)\n\nprint(\"Mean:\"\
+    , statistics.mean(runtimes))\nprint(\"Std Dev:\", statistics.stdev(runtimes))"
+docker:
+  base_image: docker.io/sweperf/sweperf:matplotlib__matplotlib-26899
+  human_image: docker.io/sweperf/sweperf_annotate:matplotlib__matplotlib-26899
+  llm_image: PLACEHOLDER
+  commands:
+    run_base: docker run --rm --name bench_{id}_base --mount type=bind,src=<WORKLOAD_PY>,dst=/tmp/workload.py
+      {base_image} /bin/bash -lc 'python /tmp/workload.py' 2>&1
+    run_human: docker run --rm --name bench_{id}_human --mount type=bind,src=<WORKLOAD_PY>,dst=/tmp/workload.py
+      {human_image} /bin/bash -lc 'chmod +x /perf.sh && /perf.sh && python /tmp/workload.py'
+      2>&1
+    run_llm: echo 'LLM image not available yet for {id}. Please fill docker.llm_image.'
+metrics:
+  reducer: mean_std
+  parse_regex:
+    mean: (?i)\bMean:\s*([0-9.]+)
+    std: (?i)(Std Dev|SD):\s*([0-9.]+)
+notes:
+  user_notes: 'Before Mean: 0.6573071256047115
+
+    Before SD: 0.018639898279045244
+
+    After Mean: 0.48301592964679
+
+    After SD: 0.021425659162797973
+
+    Improvement: -26.52%'
+  mike_notes: ''
+meta:
+  num_covering_tests: '99'

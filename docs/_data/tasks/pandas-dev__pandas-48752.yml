@@ -1,0 +1,63 @@
+id: pandas-dev__pandas-48752
+status:
+  human: APPROVED
+  llm: COMING_SOON
+comparison:
+  llm_better: COMING_SOON
+repo:
+  org: pandas-dev
+  name: pandas
+  url: https://github.com/pandas-dev/pandas
+  pull_request: https://github.com/pandas-dev/pandas/pull/48752
+  base_commit: 7aa391ead0f8761219add833045f77a40a25effe
+  created_at: '2022-09-23 23:43:33'
+  version: '1.4'
+workload:
+  language: python
+  code: "import timeit\nimport statistics\n\nimport pandas as pd\n\ntry:\n    import\
+    \ pandas._testing as tm\nexcept ImportError:\n    import pandas.util.testing as\
+    \ tm\n\nN = 10**5\n\ndtypes = (\"datetime\", \"int\", \"string\", \"ea_int\")\n\
+    \nlevel1 = range(1000)\n\nlevel2 = pd.date_range(start=\"1/1/2000\", periods=N\
+    \ // 1000)\ndates_left = pd.MultiIndex.from_product([level1, level2])\n\nlevel2\
+    \ = range(N // 1000)\nint_left = pd.MultiIndex.from_product([level1, level2])\n\
+    \nlevel2 = tm.makeStringIndex(N // 1000).values\nstr_left = pd.MultiIndex.from_product([level1,\
+    \ level2])\n\nlevel2 = range(N // 1000)\nea_int_left = pd.MultiIndex.from_product([level1,\
+    \ pd.Series(level2, dtype=\"Int64\")])\n\ndata = {\n    \"datetime\": dates_left,\n\
+    \    \"int\": int_left,\n    \"string\": str_left,\n    \"ea_int\": ea_int_left,\n\
+    }\ndata_non_monotonic = {k: mi[::-1] for k, mi in data.items()}\n\ndata = {k:\
+    \ {\"left\": mi, \"right\": mi[:-1]} for k, mi in data.items()}\ndata_non_monotonic\
+    \ = {k: {\"left\": mi, \"right\": mi[:-1]} for k, mi in data_non_monotonic.items()}\n\
+    \ndef workload():\n    for dtype in dtypes:\n        data[dtype]['left'].union(data[dtype]['right'])\n\
+    \        data_non_monotonic[dtype]['left'].union(data_non_monotonic[dtype]['right'])\n\
+    \        \nruntimes = timeit.repeat(workload, number=1, repeat=100)\n\n# Print\
+    \ runtime mean and std deviation.\nprint(\"Mean:\", statistics.mean(runtimes))\n\
+    print(\"Std Dev:\", statistics.stdev(runtimes))\n"
+docker:
+  base_image: docker.io/sweperf/sweperf:pandas-dev__pandas-48752
+  human_image: docker.io/sweperf/sweperf_annotate:pandas-dev__pandas-48752
+  llm_image: PLACEHOLDER
+  commands:
+    run_base: docker run --rm --name bench_{id}_base --mount type=bind,src=<WORKLOAD_PY>,dst=/tmp/workload.py
+      {base_image} /bin/bash -lc 'python /tmp/workload.py' 2>&1
+    run_human: docker run --rm --name bench_{id}_human --mount type=bind,src=<WORKLOAD_PY>,dst=/tmp/workload.py
+      {human_image} /bin/bash -lc 'chmod +x /perf.sh && /perf.sh && python /tmp/workload.py'
+      2>&1
+    run_llm: echo 'LLM image not available yet for {id}. Please fill docker.llm_image.'
+metrics:
+  reducer: mean_std
+  parse_regex:
+    mean: (?i)\bMean:\s*([0-9.]+)
+    std: (?i)(Std Dev|SD):\s*([0-9.]+)
+notes:
+  user_notes: 'Before Mean: 0.2035377869394142
+
+    Before SD: 0.016853061447521443
+
+    After Mean: 0.11548900521884206
+
+    After SD: 0.003738354129482239
+
+    Improvement: -43.26%'
+  mike_notes: ''
+meta:
+  num_covering_tests: '18'

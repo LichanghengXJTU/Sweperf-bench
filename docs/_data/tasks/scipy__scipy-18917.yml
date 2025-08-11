@@ -1,0 +1,51 @@
+id: scipy__scipy-18917
+status:
+  human: APPROVED
+  llm: COMING_SOON
+comparison:
+  llm_better: COMING_SOON
+repo:
+  org: scipy
+  name: scipy
+  url: https://github.com/scipy/scipy
+  pull_request: https://github.com/scipy/scipy/pull/18917
+  base_commit: defcb37766e99d77e1997728d65a890efe895074
+  created_at: '2023-07-19 20:35:45'
+  version: '1.11'
+workload:
+  language: python
+  code: "import timeit\nimport statistics\n\nimport scipy.signal\n\n# Generate a large\
+    \ array to compute the spline on.\nimport numpy as np\n\ndata = np.random.rand(1000000)\
+    \  # Adjust size as needed\n    \ndef workload():\n    scipy.signal.cspline1d(data)\n\
+    \    scipy.signal.qspline1d(data)\n\nruntimes = timeit.repeat(workload, number=1,\
+    \ repeat=100)\n\nprint(\"Mean:\", statistics.mean(runtimes))\nprint(\"Std Dev:\"\
+    , statistics.stdev(runtimes))"
+docker:
+  base_image: docker.io/sweperf/sweperf:scipy__scipy-18917
+  human_image: docker.io/sweperf/sweperf_annotate:scipy__scipy-18917
+  llm_image: PLACEHOLDER
+  commands:
+    run_base: docker run --rm --name bench_{id}_base --mount type=bind,src=<WORKLOAD_PY>,dst=/tmp/workload.py
+      {base_image} /bin/bash -lc 'python /tmp/workload.py' 2>&1
+    run_human: docker run --rm --name bench_{id}_human --mount type=bind,src=<WORKLOAD_PY>,dst=/tmp/workload.py
+      {human_image} /bin/bash -lc 'chmod +x /perf.sh && /perf.sh && python /tmp/workload.py'
+      2>&1
+    run_llm: echo 'LLM image not available yet for {id}. Please fill docker.llm_image.'
+metrics:
+  reducer: mean_std
+  parse_regex:
+    mean: (?i)\bMean:\s*([0-9.]+)
+    std: (?i)(Std Dev|SD):\s*([0-9.]+)
+notes:
+  user_notes: 'Before Mean: 1.0537665090209338
+
+    Before SD: 0.004513079109404859
+
+    After Mean: 0.16560001798177837
+
+    After SD: 0.0016845501345679006
+
+    Improvement: -84.28%'
+  mike_notes: ''
+meta:
+  num_covering_tests: '2'

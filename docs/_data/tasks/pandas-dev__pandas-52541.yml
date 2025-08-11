@@ -1,0 +1,61 @@
+id: pandas-dev__pandas-52541
+status:
+  human: APPROVED
+  llm: COMING_SOON
+comparison:
+  llm_better: COMING_SOON
+repo:
+  org: pandas-dev
+  name: pandas
+  url: https://github.com/pandas-dev/pandas
+  pull_request: https://github.com/pandas-dev/pandas/pull/52541
+  base_commit: 3c447454c7daaa8d245b8386d7ba2b2da70f7e73
+  created_at: '2023-04-08 17:19:14'
+  version: '2'
+workload:
+  language: python
+  code: "import timeit\nimport statistics\n\nimport numpy as np\nimport pandas as\
+    \ pd\n\n\nN = 10_000\naxis = 1\nsort = False\nstructures = [\"monotonic\", \"\
+    non_monotonic\", \"has_na\"]\ndtypes = [\"int64[pyarrow]\", \"Int64\"]\n\n\nseries_registry\
+    \ = []\nfor dtype in dtypes:\n    for structure in structures:\n        vals =\
+    \ np.arange(N, dtype=np.int64)\n        idx = pd.Index(vals, dtype=dtype)\n\n\
+    \        if structure == \"monotonic\":\n            idx = idx.sort_values()\n\
+    \        elif structure == \"non_monotonic\":\n            idx = idx[::-1]\n \
+    \       elif structure == \"has_na\":\n            if not idx._can_hold_na:\n\
+    \                continue\n            idx = pd.Index([None], dtype=dtype).append(idx)\n\
+    \        else:\n            continue\n\n        series_list = [pd.Series(i, idx[:-i])\
+    \ for i in range(1, 6)]\n        series_registry.append((dtype, series_list))\n\
+    \n\n# One single workload that runs all pyarrow concat cases\ndef workload():\n\
+    \    for dtype, series_list in series_registry:\n        pd.concat(series_list,\
+    \ axis=axis, sort=sort)\n\nruntimes = timeit.repeat(workload, number=5, repeat=100)\n\
+    \n# Print runtime mean and std deviation.\nprint(\"Mean:\", statistics.mean(runtimes))\n\
+    print(\"Std Dev:\", statistics.stdev(runtimes))"
+docker:
+  base_image: docker.io/sweperf/sweperf:pandas-dev__pandas-52541
+  human_image: docker.io/sweperf/sweperf_annotate:pandas-dev__pandas-52541
+  llm_image: PLACEHOLDER
+  commands:
+    run_base: docker run --rm --name bench_{id}_base --mount type=bind,src=<WORKLOAD_PY>,dst=/tmp/workload.py
+      {base_image} /bin/bash -lc 'python /tmp/workload.py' 2>&1
+    run_human: docker run --rm --name bench_{id}_human --mount type=bind,src=<WORKLOAD_PY>,dst=/tmp/workload.py
+      {human_image} /bin/bash -lc 'chmod +x /perf.sh && /perf.sh && python /tmp/workload.py'
+      2>&1
+    run_llm: echo 'LLM image not available yet for {id}. Please fill docker.llm_image.'
+metrics:
+  reducer: mean_std
+  parse_regex:
+    mean: (?i)\bMean:\s*([0-9.]+)
+    std: (?i)(Std Dev|SD):\s*([0-9.]+)
+notes:
+  user_notes: 'Before Mean: 0.2980660138500389
+
+    Before SD: 0.0023241641175667897
+
+    After Mean: 0.0685087961651152
+
+    After SD: 0.0013649634177927198
+
+    Improvement: -77.02%'
+  mike_notes: ''
+meta:
+  num_covering_tests: '78'

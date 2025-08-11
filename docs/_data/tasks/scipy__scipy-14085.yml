@@ -1,0 +1,64 @@
+id: scipy__scipy-14085
+status:
+  human: APPROVED
+  llm: COMING_SOON
+comparison:
+  llm_better: COMING_SOON
+repo:
+  org: scipy
+  name: scipy
+  url: https://github.com/scipy/scipy
+  pull_request: https://github.com/scipy/scipy/pull/14085
+  base_commit: bf9443281a7bc2335ea51119f1ca5913494ef200
+  created_at: '2021-05-19 0:41:19'
+  version: '1.6'
+workload:
+  language: python
+  code: "import timeit\nimport statistics\nimport numpy as np\nfrom scipy.spatial\
+    \ import distance\n\ndef setup():\n    global xd\n\n    class XdistWeighted:\n\
+    \        params = (\n            [10, 20, 100],\n            ['euclidean', 'minkowski',\
+    \ 'cityblock', 'sqeuclidean', 'cosine',\n             'correlation', 'hamming',\
+    \ 'jaccard', 'chebyshev', 'canberra',\n             'braycurtis', 'yule', 'dice',\
+    \ 'kulczynski1', 'rogerstanimoto',\n             'russellrao', 'sokalmichener',\
+    \ 'sokalsneath', 'minkowski-P3'])\n        param_names = ['num_points', 'metric']\n\
+    \n        def setup(self, num_points, metric):\n            rng = np.random.default_rng(123)\n\
+    \            self.points = rng.random((num_points, 3))\n            self.metric\
+    \ = metric\n            if metric == 'minkowski-P3':\n                # p=2 is\
+    \ just the euclidean metric, try another p value as well\n                self.kwargs\
+    \ = {'p': 3.0}\n                self.metric = 'minkowski'\n            else:\n\
+    \                self.kwargs = {}\n            self.weights = np.ones(3)\n\n \
+    \   xd = XdistWeighted()\n    xd.setup(100, 'canberra')\n\ndef workload():\n \
+    \   global xd\n    distance.pdist(xd.points, xd.metric, w=xd.weights, **xd.kwargs)\n\
+    \    distance.cdist(xd.points, xd.points, xd.metric, w=xd.weights, **xd.kwargs)\n\
+    \nruntimes = timeit.repeat(workload, number=1, repeat=200, setup=setup)\n\nprint(\"\
+    Mean:\", statistics.mean(runtimes[-100:]))\nprint(\"Std Dev:\", statistics.stdev(runtimes[-100:]))\n\
+    \n"
+docker:
+  base_image: docker.io/sweperf/sweperf:scipy__scipy-14085
+  human_image: docker.io/sweperf/sweperf_annotate:scipy__scipy-14085
+  llm_image: PLACEHOLDER
+  commands:
+    run_base: docker run --rm --name bench_{id}_base --mount type=bind,src=<WORKLOAD_PY>,dst=/tmp/workload.py
+      {base_image} /bin/bash -lc 'python /tmp/workload.py' 2>&1
+    run_human: docker run --rm --name bench_{id}_human --mount type=bind,src=<WORKLOAD_PY>,dst=/tmp/workload.py
+      {human_image} /bin/bash -lc 'chmod +x /perf.sh && /perf.sh && python /tmp/workload.py'
+      2>&1
+    run_llm: echo 'LLM image not available yet for {id}. Please fill docker.llm_image.'
+metrics:
+  reducer: mean_std
+  parse_regex:
+    mean: (?i)\bMean:\s*([0-9.]+)
+    std: (?i)(Std Dev|SD):\s*([0-9.]+)
+notes:
+  user_notes: 'Before Mean: 0.2707862485406804
+
+    Before SD: 0.00208467236842253
+
+    After Mean: 6.496348039945587e-05
+
+    After SD: 2.5740330588724652e-06
+
+    Improvement: -99.98%'
+  mike_notes: ''
+meta:
+  num_covering_tests: '8'

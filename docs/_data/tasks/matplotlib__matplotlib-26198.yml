@@ -1,0 +1,107 @@
+id: matplotlib__matplotlib-26198
+status:
+  human: APPROVED
+  llm: COMING_SOON
+comparison:
+  llm_better: COMING_SOON
+repo:
+  org: matplotlib
+  name: matplotlib
+  url: https://github.com/matplotlib/matplotlib
+  pull_request: https://github.com/matplotlib/matplotlib/pull/26198
+  base_commit: aee2ea3c3537fe5551c8737a1a580152c89ca0e6
+  created_at: '2023-06-27 3:42:04'
+  version: '3.7'
+workload:
+  language: python
+  code: "import timeit\nimport statistics\n\nfrom matplotlib import mathtext\n\nmath_tests\
+    \ = [\n    r'$a+b+\\dot s+\\dot{s}+\\ldots$',\n    r'$x\\hspace{-0.2}\\doteq\\\
+    hspace{-0.2}y$',\n    r'\\$100.00 $\\alpha \\_$',\n    r'$\\frac{\\$100.00}{y}$',\n\
+    \    r'$x   y$',\n    r'$x+y\\ x=y\\ x<y\\ x:y\\ x,y\\ x@y$',\n    r'$100\\%y\\\
+    \ x*y\\ x/y x\\$y$',\n    r'$x\\leftarrow y\\ x\\forall y\\ x-y$',\n    r'$x \\\
+    sf x \\bf x {\\cal X} \\rm x$',\n    r'$x\\ x\\,x\\;x\\quad x\\qquad x\\!x\\hspace{\
+    \ 0.5 }y$',\n    r'$\\{ \\rm braces \\}$',\n    r'$\\left[\\left\\lfloor\\frac{5}{\\\
+    frac{\\left(3\\right)}{4}} y\\right)\\right]$',\n    r'$\\left(x\\right)$',\n\
+    \    r'$\\sin(x)$',\n    r'$x_2$',\n    r'$x^2$',\n    r'$x^2_y$',\n    r'$x_y^2$',\n\
+    \    (r'$\\sum _{\\genfrac{}{}{0}{}{0\\leq i\\leq m}{0<j<n}}f\\left(i,j\\right)'\n\
+    \     r'\\mathcal{R}\\prod_{i=\\alpha_{i+1}}^\\infty a_i \\sin(2 \\pi f x_i)'\n\
+    \     r\"\\sqrt[2]{\\prod^\\frac{x}{2\\pi^2}_\\infty}$\"),\n    r'$x = \\frac{x+\\\
+    frac{5}{2}}{\\frac{y+3}{8}}$',\n    r'$dz/dt = \\gamma x^2 + {\\rm sin}(2\\pi\
+    \ y+\\phi)$',\n    r'Foo: $\\alpha_{i+1}^j = {\\rm sin}(2\\pi f_j t_i) e^{-5 t_i/\\\
+    tau}$',\n    r'Variable $i$ is good',\n    r'$\\Delta_i^j$',\n    r'$\\Delta^j_{i+1}$',\n\
+    \    r'$\\ddot{o}\\acute{e}\\grave{e}\\hat{O}\\breve{\\imath}\\tilde{n}\\vec{q}$',\n\
+    \    r\"$\\arccos((x^i))$\",\n    r\"$\\gamma = \\frac{x=\\frac{6}{8}}{y} \\delta$\"\
+    ,\n    r'$\\limsup_{x\\to\\infty}$',\n    r\"$f'\\quad f'''(x)\\quad ''/\\mathrm{yr}$\"\
+    ,\n    r'$\\frac{x_2888}{y}$',\n    r\"$\\sqrt[3]{\\frac{X_2}{Y}}=5$\",\n    r\"\
+    $\\sqrt[3]{x}=5$\",\n    r'$\\frac{X}{\\frac{X}{Y}}$',\n    r\"$W^{3\\beta}_{\\\
+    delta_1 \\rho_1 \\sigma_2} = U^{3\\beta}_{\\delta_1 \\rho_1} + \\frac{1}{8 \\\
+    pi 2} \\int^{\\alpha_2}_{\\alpha_2} d \\alpha^\\prime_2 \\left[\\frac{ U^{2\\\
+    beta}_{\\delta_1 \\rho_1} - \\alpha^\\prime_2U^{1\\beta}_{\\rho_1 \\sigma_2} }{U^{0\\\
+    beta}_{\\rho_1 \\sigma_2}}\\right]$\",\n    r'$\\mathcal{H} = \\int d \\tau \\\
+    left(\\epsilon E^2 + \\mu H^2\\right)$',\n    r'$\\widehat{abc}\\widetilde{def}$',\n\
+    \    '$\\\\Gamma \\\\Delta \\\\Theta \\\\Lambda \\\\Xi \\\\Pi \\\\Sigma \\\\Upsilon\
+    \ \\\\Phi \\\\Psi \\\\Omega$',\n    '$\\\\alpha \\\\beta \\\\gamma \\\\delta \\\
+    \\epsilon \\\\zeta \\\\eta \\\\theta \\\\iota \\\\lambda \\\\mu \\\\nu \\\\xi\
+    \ \\\\pi \\\\kappa \\\\rho \\\\sigma \\\\tau \\\\upsilon \\\\phi \\\\chi \\\\\
+    psi$',\n    r'${x}^{2}{y}^{2}$',\n    r'${}_{2}F_{3}$',\n    r'$\\frac{x+{y}^{2}}{k+1}$',\n\
+    \    r'$x+{y}^{\\frac{2}{k+1}}$',\n    r'$\\frac{a}{b/2}$',\n    r'${a}_{0}+\\\
+    frac{1}{{a}_{1}+\\frac{1}{{a}_{2}+\\frac{1}{{a}_{3}+\\frac{1}{{a}_{4}}}}}$',\n\
+    \    r'${a}_{0}+\\frac{1}{{a}_{1}+\\frac{1}{{a}_{2}+\\frac{1}{{a}_{3}+\\frac{1}{{a}_{4}}}}}$',\n\
+    \    r'$\\binom{n}{k/2}$',\n    r'$\\binom{p}{2}{x}^{2}{y}^{p-2}-\\frac{1}{1-x}\\\
+    frac{1}{1-{x}^{2}}$',\n    r'${x}^{2y}$',\n    r'$\\sum _{i=1}^{p}\\sum _{j=1}^{q}\\\
+    sum _{k=1}^{r}{a}_{ij}{b}_{jk}{c}_{ki}$',\n    r'$\\sqrt{1+\\sqrt{1+\\sqrt{1+\\\
+    sqrt{1+\\sqrt{1+\\sqrt{1+\\sqrt{1+x}}}}}}}$',\n    r'$\\left(\\frac{{\\partial\
+    \ }^{2}}{\\partial {x}^{2}}+\\frac{{\\partial }^{2}}{\\partial {y}^{2}}\\right){|\\\
+    varphi \\left(x+iy\\right)|}^{2}=0$',\n    r'${2}^{{2}^{{2}^{x}}}$',\n    r'${\\\
+    int }_{1}^{x}\\frac{\\mathrm{dt}}{t}$',\n    r'$\\int {\\int }_{D}\\mathrm{dx}\
+    \ \\mathrm{dy}$',\n    r'${y}_{{x}^{2}}$',\n    r'${y}_{{x}_{2}}$',\n    r'${x}_{92}^{31415}+\\\
+    pi $',\n    r'${x}_{{y}_{b}^{a}}^{{z}_{c}^{d}}$',\n    r'${y}_{3}^{\\prime \\\
+    prime \\prime }$',\n    r\"$\\left( \\xi \\left( 1 - \\xi \\right) \\right)$\"\
+    ,  # Bug 2969451\n    r\"$\\left(2 \\, a=b\\right)$\",  # Sage bug #8125\n   \
+    \ r\"$? ! &$\",  # github issue #466\n    r\"$\\left\\Vert \\frac{a}{b} \\right\\\
+    Vert \\left\\vert \\frac{a}{b} \\right\\vert \\left\\| \\frac{a}{b}\\right\\|\
+    \ \\left| \\frac{a}{b} \\right| \\Vert a \\Vert \\vert b \\vert \\| a \\| | b\
+    \ |$\",\n    r'$\\mathring{A}  \\AA$',\n    r'$M \\, M \\thinspace M \\/ M \\\
+    > M \\: M \\; M \\ M \\enspace M \\quad M \\qquad M \\! M$',\n    r'$\\Cap$ $\\\
+    Cup$ $\\leftharpoonup$ $\\barwedge$ $\\rightharpoonup$',\n    r'$\\hspace{-0.2}\\\
+    dotplus\\hspace{-0.2}$ $\\hspace{-0.2}\\doteq\\hspace{-0.2}$ $\\hspace{-0.2}\\\
+    doteqdot\\hspace{-0.2}$ $\\ddots$',\n    r'$xyz^kx_kx^py^{p-2} d_i^jb_jc_kd x^j_i\
+    \ E^0 E^0_u$',  # github issue #4873\n    r'${xyz}^k{x}_{k}{x}^{p}{y}^{p-2} {d}_{i}^{j}{b}_{j}{c}_{k}{d}\
+    \ {x}^{j}_{i}{E}^{0}{E}^0_u$',\n    r'${\\int}_x^x x\\oint_x^x x\\int_{X}^{X}x\\\
+    int_x x \\int^x x \\int_{x} x\\int^{x}{\\int}_{x} x{\\int}^{x}_{x}x$',\n    r'testing$^{123}$',\n\
+    \    r'$6-2$; $-2$; $ -2$; ${-2}$; ${  -2}$; $20^{+3}_{-2}$',\n    r'$\\overline{\\\
+    omega}^x \\frac{1}{2}_0^x$',  # github issue #5444\n    r'$,$ $.$ $1{,}234{, }567{\
+    \ , }890$ and $1,234,567,890$',  # github issue 5799\n    r'$\\left(X\\right)_{a}^{b}$',\
+    \  # github issue 7615\n    r'$\\dfrac{\\$100.00}{y}$',  # github issue #1888\n\
+    ]\n\nparser = mathtext.MathTextParser('agg')\n\ndef workload():\n    [parser.parse(a)\
+    \ for a in math_tests]\n\nruntimes = timeit.repeat(workload, number=1, repeat=100)\n\
+    \nprint(\"Mean:\", statistics.mean(runtimes))\nprint(\"Std Dev:\", statistics.stdev(runtimes))"
+docker:
+  base_image: docker.io/sweperf/sweperf:matplotlib__matplotlib-26198
+  human_image: docker.io/sweperf/sweperf_annotate:matplotlib__matplotlib-26198
+  llm_image: PLACEHOLDER
+  commands:
+    run_base: docker run --rm --name bench_{id}_base --mount type=bind,src=<WORKLOAD_PY>,dst=/tmp/workload.py
+      {base_image} /bin/bash -lc 'python /tmp/workload.py' 2>&1
+    run_human: docker run --rm --name bench_{id}_human --mount type=bind,src=<WORKLOAD_PY>,dst=/tmp/workload.py
+      {human_image} /bin/bash -lc 'chmod +x /perf.sh && /perf.sh && python /tmp/workload.py'
+      2>&1
+    run_llm: echo 'LLM image not available yet for {id}. Please fill docker.llm_image.'
+metrics:
+  reducer: mean_std
+  parse_regex:
+    mean: (?i)\bMean:\s*([0-9.]+)
+    std: (?i)(Std Dev|SD):\s*([0-9.]+)
+notes:
+  user_notes: 'Before Mean: 0.29311394126561935
+
+    Before SD: 0.01869009078344245
+
+    After Mean: 0.2517442906211363
+
+    After SD: 0.009492876060145728
+
+    Improvement: -14.11%'
+  mike_notes: ''
+meta:
+  num_covering_tests: '26'

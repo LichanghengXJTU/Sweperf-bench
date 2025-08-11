@@ -1,0 +1,52 @@
+id: dask__dask-5553
+status:
+  human: APPROVED
+  llm: COMING_SOON
+comparison:
+  llm_better: COMING_SOON
+repo:
+  org: dask
+  name: dask
+  url: https://github.com/dask/dask
+  pull_request: https://github.com/dask/dask/pull/5553
+  base_commit: 09f7b637a54280f395a06963c5af115ce42027f3
+  created_at: '2019-11-02 15:52:56'
+  version: '2.7'
+workload:
+  language: python
+  code: "import timeit\nimport statistics\n\nimport pandas as pd\nimport dask.dataframe\
+    \ as dd\n\ndef setup():\n    global ddf\n    data = {}\n    for i in range(10000):\n\
+    \        data[\"col\"+str(i)] = [1.0] * 10\n    df = pd.DataFrame(data)\n    ddf\
+    \ = dd.from_pandas(df, npartitions=1)\n\ndef workload():\n    global ddf\n   \
+    \ dloc = ddf.loc[0]\n    dmeta = ddf._meta_nonempty\n\nruntimes = timeit.repeat(workload,\
+    \ number=1, repeat=100, setup=setup)\n\n# Print runtime mean and std deviation.\n\
+    print(\"Mean:\", statistics.mean(runtimes))\nprint(\"Std Dev:\", statistics.stdev(runtimes))\n"
+docker:
+  base_image: docker.io/sweperf/sweperf:dask__dask-5553
+  human_image: docker.io/sweperf/sweperf_annotate:dask__dask-5553
+  llm_image: PLACEHOLDER
+  commands:
+    run_base: docker run --rm --name bench_{id}_base --mount type=bind,src=<WORKLOAD_PY>,dst=/tmp/workload.py
+      {base_image} /bin/bash -lc 'python /tmp/workload.py' 2>&1
+    run_human: docker run --rm --name bench_{id}_human --mount type=bind,src=<WORKLOAD_PY>,dst=/tmp/workload.py
+      {human_image} /bin/bash -lc 'chmod +x /perf.sh && /perf.sh && python /tmp/workload.py'
+      2>&1
+    run_llm: echo 'LLM image not available yet for {id}. Please fill docker.llm_image.'
+metrics:
+  reducer: mean_std
+  parse_regex:
+    mean: (?i)\bMean:\s*([0-9.]+)
+    std: (?i)(Std Dev|SD):\s*([0-9.]+)
+notes:
+  user_notes: 'Before Mean: 1.874702638053568
+
+    Before SD: 0.00811709165709619
+
+    After Mean: 0.48332750459143425
+
+    After SD: 0.0017711521842488167
+
+    Improvement: -74.22%'
+  mike_notes: ''
+meta:
+  num_covering_tests: '22'

@@ -1,0 +1,50 @@
+id: scikit-learn__scikit-learn-29835
+status:
+  human: APPROVED
+  llm: COMING_SOON
+comparison:
+  llm_better: COMING_SOON
+repo:
+  org: scikit-learn
+  name: scikit-learn
+  url: https://github.com/scikit-learn/scikit-learn
+  pull_request: https://github.com/scikit-learn/scikit-learn/pull/29835
+  base_commit: bb6e76e679b54b8ba3452d823ae96faa49ad10d0
+  created_at: '2024-09-11 23:15:03'
+  version: '1.6'
+workload:
+  language: python
+  code: "import timeit\nimport statistics\n\nimport sklearn.covariance\nimport numpy\
+    \ as np\nnp.random.seed(1)\n\nt = np.concatenate([np.random.randn(1000, 2), [2,\
+    \ 4] * np.random.randn(100, 2)])\n\ndef workload():\n    sklearn.covariance.MinCovDet().fit(t).covariance_\n\
+    \nruntimes = timeit.repeat(workload, number=1, repeat=25)\n\nprint(\"Mean:\",\
+    \ statistics.mean(runtimes))\nprint(\"Std Dev:\", statistics.stdev(runtimes))"
+docker:
+  base_image: docker.io/sweperf/sweperf:scikit-learn__scikit-learn-29835
+  human_image: docker.io/sweperf/sweperf_annotate:scikit-learn__scikit-learn-29835
+  llm_image: PLACEHOLDER
+  commands:
+    run_base: docker run --rm --name bench_{id}_base --mount type=bind,src=<WORKLOAD_PY>,dst=/tmp/workload.py
+      {base_image} /bin/bash -lc 'python /tmp/workload.py' 2>&1
+    run_human: docker run --rm --name bench_{id}_human --mount type=bind,src=<WORKLOAD_PY>,dst=/tmp/workload.py
+      {human_image} /bin/bash -lc 'chmod +x /perf.sh && /perf.sh && python /tmp/workload.py'
+      2>&1
+    run_llm: echo 'LLM image not available yet for {id}. Please fill docker.llm_image.'
+metrics:
+  reducer: mean_std
+  parse_regex:
+    mean: (?i)\bMean:\s*([0-9.]+)
+    std: (?i)(Std Dev|SD):\s*([0-9.]+)
+notes:
+  user_notes: 'Before Mean: 0.3110930606839247
+
+    Before SD: 0.010282437278453281
+
+    After Mean: 0.27389741599326956
+
+    After SD: 0.007447711776727998
+
+    Improvement: -11.96%'
+  mike_notes: ''
+meta:
+  num_covering_tests: '3'

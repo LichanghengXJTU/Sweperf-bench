@@ -1,0 +1,56 @@
+id: scipy__scipy-8558
+status:
+  human: APPROVED
+  llm: COMING_SOON
+comparison:
+  llm_better: COMING_SOON
+repo:
+  org: scipy
+  name: scipy
+  url: https://github.com/scipy/scipy
+  pull_request: https://github.com/scipy/scipy/pull/8558
+  base_commit: 98e28806dc0985fdb8749fdbbe3d78700f29fbe4
+  created_at: '2018-03-15 18:08:00'
+  version: '1'
+workload:
+  language: python
+  code: "import timeit\nimport statistics\nimport numpy as np\nnp.random.seed(42)\n\
+    \nfrom scipy import stats\n\ndef measure(n):\n    \"Measurement model, return\
+    \ two coupled measurements.\"\n    m1 = np.random.normal(size=n)\n    m2 = np.random.normal(scale=0.5,\
+    \ size=n)\n    return m1+m2, m1-m2\n\ndef setup():\n    global kernel, positions\n\
+    \    m1, m2 = measure(2000)\n    xmin = m1.min()\n    xmax = m1.max()\n    ymin\
+    \ = m2.min()\n    ymax = m2.max()\n\n    X, Y = np.mgrid[xmin:xmax:200j, ymin:ymax:200j]\n\
+    \    positions = np.vstack([X.ravel(), Y.ravel()])\n    values = np.vstack([m1,\
+    \ m2])\n    kernel = stats.gaussian_kde(values)\n\ndef workload():\n    global\
+    \ kernel, positions\n    kernel(positions)\n\nruntimes = timeit.repeat(workload,\
+    \ number=1, repeat=20, setup=setup)\n\nprint(\"Mean:\", statistics.mean(runtimes[-10:]))\n\
+    print(\"Std Dev:\", statistics.stdev(runtimes[-10:]))"
+docker:
+  base_image: docker.io/sweperf/sweperf:scipy__scipy-8558
+  human_image: docker.io/sweperf/sweperf_annotate:scipy__scipy-8558
+  llm_image: PLACEHOLDER
+  commands:
+    run_base: docker run --rm --name bench_{id}_base --mount type=bind,src=<WORKLOAD_PY>,dst=/tmp/workload.py
+      {base_image} /bin/bash -lc 'python /tmp/workload.py' 2>&1
+    run_human: docker run --rm --name bench_{id}_human --mount type=bind,src=<WORKLOAD_PY>,dst=/tmp/workload.py
+      {human_image} /bin/bash -lc 'chmod +x /perf.sh && /perf.sh && python /tmp/workload.py'
+      2>&1
+    run_llm: echo 'LLM image not available yet for {id}. Please fill docker.llm_image.'
+metrics:
+  reducer: mean_std
+  parse_regex:
+    mean: (?i)\bMean:\s*([0-9.]+)
+    std: (?i)(Std Dev|SD):\s*([0-9.]+)
+notes:
+  user_notes: 'Before Mean: 1.2927865508041578
+
+    Before SD: 0.11194089398639237
+
+    After Mean: 0.7688063387031434
+
+    After SD: 0.0009107950556574929
+
+    Improvement: -40.53%'
+  mike_notes: ''
+meta:
+  num_covering_tests: '1'

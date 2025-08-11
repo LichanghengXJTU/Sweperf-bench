@@ -1,0 +1,54 @@
+id: scikit-learn__scikit-learn-9858
+status:
+  human: APPROVED
+  llm: COMING_SOON
+comparison:
+  llm_better: COMING_SOON
+repo:
+  org: scikit-learn
+  name: scikit-learn
+  url: https://github.com/scikit-learn/scikit-learn
+  pull_request: https://github.com/scikit-learn/scikit-learn/pull/9858
+  base_commit: 4e6b403796238a1263b871a67d72d39ab61f2075
+  created_at: '2017-09-30 22:19:14'
+  version: '0.2'
+workload:
+  language: python
+  code: "import timeit\nimport statistics\n\nfrom sklearn.covariance import graph_lasso\n\
+    import numpy as np\n\nrng = np.random.RandomState(0)\nX = rng.randn(2_000, 1_000)\
+    \        # (n_samples, n_features)\nemp_cov = np.dot(X.T, X) / X.shape[0]\n\n\
+    def workload():\n    \"\"\"\n    One full graphical-lasso solve.  Coordinate-descent\
+    \ (mode='cd') is the\n    path that PR #9858 sped up.\n    \"\"\"\n    # use a\
+    \ fairly loose alpha so the solver has to iterate a while\n    graph_lasso(emp_cov,\
+    \ alpha=0.01, max_iter=100, mode=\"cd\", tol=1e-4, verbose=False)\n\n\nruntimes\
+    \ = timeit.repeat(workload, number=1, repeat=10)\n\nprint(\"Mean:\", statistics.mean(runtimes))\n\
+    print(\"Std Dev:\", statistics.stdev(runtimes))\n"
+docker:
+  base_image: docker.io/sweperf/sweperf:scikit-learn__scikit-learn-9858
+  human_image: docker.io/sweperf/sweperf_annotate:scikit-learn__scikit-learn-9858
+  llm_image: PLACEHOLDER
+  commands:
+    run_base: docker run --rm --name bench_{id}_base --mount type=bind,src=<WORKLOAD_PY>,dst=/tmp/workload.py
+      {base_image} /bin/bash -lc 'python /tmp/workload.py' 2>&1
+    run_human: docker run --rm --name bench_{id}_human --mount type=bind,src=<WORKLOAD_PY>,dst=/tmp/workload.py
+      {human_image} /bin/bash -lc 'chmod +x /perf.sh && /perf.sh && python /tmp/workload.py'
+      2>&1
+    run_llm: echo 'LLM image not available yet for {id}. Please fill docker.llm_image.'
+metrics:
+  reducer: mean_std
+  parse_regex:
+    mean: (?i)\bMean:\s*([0-9.]+)
+    std: (?i)(Std Dev|SD):\s*([0-9.]+)
+notes:
+  user_notes: 'Before Mean: 15.2567854134948
+
+    Before SD: 0.20871026089858147
+
+    After Mean: 7.2707088610040955
+
+    After SD: 0.06796051143667903
+
+    Improvement: -52.34%'
+  mike_notes: ''
+meta:
+  num_covering_tests: '1'

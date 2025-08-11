@@ -1,0 +1,53 @@
+id: pandas-dev__pandas-33032
+status:
+  human: APPROVED
+  llm: COMING_SOON
+comparison:
+  llm_better: COMING_SOON
+repo:
+  org: pandas-dev
+  name: pandas
+  url: https://github.com/pandas-dev/pandas
+  pull_request: https://github.com/pandas-dev/pandas/pull/33032
+  base_commit: b6cb1a4448edcc2813bbe6b97f35c653bd1e342d
+  created_at: '2020-03-26 3:27:56'
+  version: '1'
+workload:
+  language: python
+  code: "\nimport timeit\nimport statistics\n\nimport pandas as pd\nimport numpy as\
+    \ np\n\narr = np.arange(10**7).reshape(-1, 10) \ndf = pd.DataFrame(arr)\ndtypes\
+    \ = ['u1', 'u2', 'u4', 'u8', 'i1', 'i2', 'i4', 'i8', 'f8', 'f4']             \
+    \                                                                 \nfor i, d in\
+    \ enumerate(dtypes): \n    df[i] = df[i].astype(d)\n\ndf.columns = [\"A\", \"\
+    A\"] + list(df.columns[2:])\n\ndef workload():\n    df.iloc[10000]\n\nruntimes\
+    \ = timeit.repeat(workload, number=5, repeat=1000)\n\nprint(\"Mean:\", statistics.mean(runtimes))\n\
+    print(\"Std Dev:\", statistics.stdev(runtimes))\n"
+docker:
+  base_image: docker.io/sweperf/sweperf:pandas-dev__pandas-33032
+  human_image: docker.io/sweperf/sweperf_annotate:pandas-dev__pandas-33032
+  llm_image: PLACEHOLDER
+  commands:
+    run_base: docker run --rm --name bench_{id}_base --mount type=bind,src=<WORKLOAD_PY>,dst=/tmp/workload.py
+      {base_image} /bin/bash -lc 'python /tmp/workload.py' 2>&1
+    run_human: docker run --rm --name bench_{id}_human --mount type=bind,src=<WORKLOAD_PY>,dst=/tmp/workload.py
+      {human_image} /bin/bash -lc 'chmod +x /perf.sh && /perf.sh && python /tmp/workload.py'
+      2>&1
+    run_llm: echo 'LLM image not available yet for {id}. Please fill docker.llm_image.'
+metrics:
+  reducer: mean_std
+  parse_regex:
+    mean: (?i)\bMean:\s*([0-9.]+)
+    std: (?i)(Std Dev|SD):\s*([0-9.]+)
+notes:
+  user_notes: 'Before Mean: 0.0810616845919285
+
+    Before SD: 0.0037245110317000803
+
+    After Mean: 0.000501746001187712
+
+    After SD: 3.11118114156774e-05
+
+    Improvement: -99.38%'
+  mike_notes: ''
+meta:
+  num_covering_tests: '78'

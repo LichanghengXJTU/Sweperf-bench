@@ -1,0 +1,62 @@
+id: matplotlib__matplotlib-21564
+status:
+  human: APPROVED
+  llm: COMING_SOON
+comparison:
+  llm_better: COMING_SOON
+repo:
+  org: matplotlib
+  name: matplotlib
+  url: https://github.com/matplotlib/matplotlib
+  pull_request: https://github.com/matplotlib/matplotlib/pull/21564
+  base_commit: b525983fb5ad295ee8a789df46989574b452369a
+  created_at: '2021-11-08 9:02:13'
+  version: '3.4'
+workload:
+  language: python
+  code: "import timeit\nimport statistics\n\nimport numpy as np\nimport matplotlib.pyplot\
+    \ as plt\nimport matplotlib.animation as animation\nfrom mpl_toolkits.mplot3d\
+    \ import Axes3D\n\n\na = 20\nd = 20\ntm0 = 10\nt_m = tm0 * np.pi/180\n\ndef phi(t):\n\
+    \    return np.pi/4 + (6 + 0.1*t) * t\n\ndef r(t):\n    return d/2 * (1 - phi(t)/phi(t_m))\n\
+    \ndef Fp(x,y,t):\n    return -1/np.sqrt((x + r(t)*np.cos(phi(t)))**2 + (y + r(t)*np.sin(phi(t)))**2)\
+    \                                                            \\\n           -1/np.sqrt((x\
+    \ - r(t)*np.cos(phi(t)))**2 + (y - r(t)*np.sin(phi(t)))**2)  \n   \nX = np.arange(-1*a,\
+    \ a)\nY = np.arange(-1*a, a)\nx, y = np.meshgrid(X,Y)\n\n\nimage_list = []\nfor\
+    \ t in range(tm0):\n    image_list.append(Fp(x,y,t*np.pi/180))\n\ndef setup():\n\
+    \    ## Create animation and video from 3D images\n    fig = plt.figure()\n  \
+    \  ax = Axes3D(fig)\n    ims = []\n    for i in range(len(image_list)):\n    \
+    \    im = ax.plot_surface(x, y, image_list[i], antialiased=False, animated=True)\n\
+    \        ims.append([im])\n    \n    global ani\n    ani = animation.ArtistAnimation(fig,\
+    \ ims, blit=True, repeat_delay=2000)\n\ndef workload():\n    global ani\n    ani.to_html5_video()\n\
+    \nruntimes = timeit.repeat(workload, number=1, repeat=5, setup=setup)\n\n# Print\
+    \ runtime mean and std deviation.\nprint(\"Mean:\", statistics.mean(runtimes))\n\
+    print(\"Std Dev:\", statistics.stdev(runtimes))"
+docker:
+  base_image: docker.io/sweperf/sweperf:matplotlib__matplotlib-21564
+  human_image: docker.io/sweperf/sweperf_annotate:matplotlib__matplotlib-21564
+  llm_image: PLACEHOLDER
+  commands:
+    run_base: docker run --rm --name bench_{id}_base --mount type=bind,src=<WORKLOAD_PY>,dst=/tmp/workload.py
+      {base_image} /bin/bash -lc 'python /tmp/workload.py' 2>&1
+    run_human: docker run --rm --name bench_{id}_human --mount type=bind,src=<WORKLOAD_PY>,dst=/tmp/workload.py
+      {human_image} /bin/bash -lc 'chmod +x /perf.sh && /perf.sh && python /tmp/workload.py'
+      2>&1
+    run_llm: echo 'LLM image not available yet for {id}. Please fill docker.llm_image.'
+metrics:
+  reducer: mean_std
+  parse_regex:
+    mean: (?i)\bMean:\s*([0-9.]+)
+    std: (?i)(Std Dev|SD):\s*([0-9.]+)
+notes:
+  user_notes: 'Before Mean: 5.817801982408855
+
+    Before SD: 0.02920437842037805
+
+    After Mean: 1.0646133859991096
+
+    After SD: 0.016456180480242395
+
+    Improvement: -81.70%'
+  mike_notes: ''
+meta:
+  num_covering_tests: '95'

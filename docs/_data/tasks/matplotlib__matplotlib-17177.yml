@@ -1,0 +1,52 @@
+id: matplotlib__matplotlib-17177
+status:
+  human: APPROVED
+  llm: COMING_SOON
+comparison:
+  llm_better: COMING_SOON
+repo:
+  org: matplotlib
+  name: matplotlib
+  url: https://github.com/matplotlib/matplotlib
+  pull_request: https://github.com/matplotlib/matplotlib/pull/17177
+  base_commit: 91ad8671e8b8bd55a5de68bc17b18dcb67a5d6ac
+  created_at: '2020-04-17 19:04:47'
+  version: '3.2'
+workload:
+  language: python
+  code: "import timeit\nimport statistics\nimport io\nimport numpy as np\nimport matplotlib\n\
+    \nmatplotlib.use(\"PS\")\n\nimport matplotlib.pyplot as plt\nIMG = np.random.randint(0,\
+    \ 255, (1024, 1024, 3), dtype=np.uint8)\n\ndef workload():\n    fig, ax = plt.subplots(figsize=(6,\
+    \ 6), dpi=100)\n    ax.axis(\"off\")\n    ax.imshow(IMG)\n    buf = io.BytesIO()\n\
+    \    fig.savefig(buf, format=\"ps\")      # triggers the hex-string wrapping\n\
+    \    plt.close(fig)\n\nruntimes = timeit.repeat(workload, number=1, repeat=25)\n\
+    \nprint(\"Mean:\", statistics.mean(runtimes))\nprint(\"Std Dev:\", statistics.stdev(runtimes))"
+docker:
+  base_image: docker.io/sweperf/sweperf:matplotlib__matplotlib-17177
+  human_image: docker.io/sweperf/sweperf_annotate:matplotlib__matplotlib-17177
+  llm_image: PLACEHOLDER
+  commands:
+    run_base: docker run --rm --name bench_{id}_base --mount type=bind,src=<WORKLOAD_PY>,dst=/tmp/workload.py
+      {base_image} /bin/bash -lc 'python /tmp/workload.py' 2>&1
+    run_human: docker run --rm --name bench_{id}_human --mount type=bind,src=<WORKLOAD_PY>,dst=/tmp/workload.py
+      {human_image} /bin/bash -lc 'chmod +x /perf.sh && /perf.sh && python /tmp/workload.py'
+      2>&1
+    run_llm: echo 'LLM image not available yet for {id}. Please fill docker.llm_image.'
+metrics:
+  reducer: mean_std
+  parse_regex:
+    mean: (?i)\bMean:\s*([0-9.]+)
+    std: (?i)(Std Dev|SD):\s*([0-9.]+)
+notes:
+  user_notes: 'Before Mean: 0.1501690558390692
+
+    Before SD: 0.0008887049925709971
+
+    After Mean: 0.059018340837210415
+
+    After SD: 0.0013657285412050238
+
+    Improvement: -60.70%'
+  mike_notes: ''
+meta:
+  num_covering_tests: '1'

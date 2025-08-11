@@ -1,0 +1,56 @@
+id: pandas-dev__pandas-50623
+status:
+  human: APPROVED
+  llm: COMING_SOON
+comparison:
+  llm_better: COMING_SOON
+repo:
+  org: pandas-dev
+  name: pandas
+  url: https://github.com/pandas-dev/pandas
+  pull_request: https://github.com/pandas-dev/pandas/pull/50623
+  base_commit: 76c39d547c42644f8ce42801d696334cd3e199a2
+  created_at: '2023-01-07 15:10:47'
+  version: '1.5'
+workload:
+  language: python
+  code: "\n\nimport timeit\nimport statistics\n\nimport pandas as pd\nimport numpy\
+    \ as np\n\nmethods = [\"any\", \"all\"]\n\nngroups = 1000\nncols = 1\nsize = ngroups\
+    \ * 2\n\ncols = [f\"values{n}\" for n in range(ncols)]\n\ndef setup():\n    global\
+    \ df\n    \n    rng = np.arange(ngroups).reshape(-1, 1)\n    rng = np.broadcast_to(rng,\
+    \ (len(rng), ncols))\n    taker = np.random.randint(0, ngroups, size=size)\n \
+    \   values = rng.take(taker, axis=0)\n    key = [\"foo\"] * size\n    df = pd.DataFrame(values,\
+    \ columns=cols)\n    df[\"key\"] = key\n\ndef workload():\n    global df\n   \
+    \ df.groupby(cols)[\"key\"].any()\n    df.groupby(cols)[\"key\"].all()\n\nruntimes\
+    \ = timeit.repeat(workload, number=5, repeat=100, setup=setup)\n\n# Print runtime\
+    \ mean and std deviation.\nprint(\"Mean:\", statistics.mean(runtimes))\nprint(\"\
+    Std Dev:\", statistics.stdev(runtimes))\n"
+docker:
+  base_image: docker.io/sweperf/sweperf:pandas-dev__pandas-50623
+  human_image: docker.io/sweperf/sweperf_annotate:pandas-dev__pandas-50623
+  llm_image: PLACEHOLDER
+  commands:
+    run_base: docker run --rm --name bench_{id}_base --mount type=bind,src=<WORKLOAD_PY>,dst=/tmp/workload.py
+      {base_image} /bin/bash -lc 'python /tmp/workload.py' 2>&1
+    run_human: docker run --rm --name bench_{id}_human --mount type=bind,src=<WORKLOAD_PY>,dst=/tmp/workload.py
+      {human_image} /bin/bash -lc 'chmod +x /perf.sh && /perf.sh && python /tmp/workload.py'
+      2>&1
+    run_llm: echo 'LLM image not available yet for {id}. Please fill docker.llm_image.'
+metrics:
+  reducer: mean_std
+  parse_regex:
+    mean: (?i)\bMean:\s*([0-9.]+)
+    std: (?i)(Std Dev|SD):\s*([0-9.]+)
+notes:
+  user_notes: 'Before Mean: 0.00980761858227197
+
+    Before SD: 0.00010859884308416428
+
+    After Mean: 0.004828637401806191
+
+    After SD: 9.223326010625832e-05
+
+    Improvement: -50.77%'
+  mike_notes: ''
+meta:
+  num_covering_tests: '12'

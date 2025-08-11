@@ -1,0 +1,52 @@
+id: matplotlib__matplotlib-22875
+status:
+  human: APPROVED
+  llm: COMING_SOON
+comparison:
+  llm_better: COMING_SOON
+repo:
+  org: matplotlib
+  name: matplotlib
+  url: https://github.com/matplotlib/matplotlib
+  pull_request: https://github.com/matplotlib/matplotlib/pull/22875
+  base_commit: 709fba81d42d39a7cdde22e7d3c790ec4090a3f3
+  created_at: '2022-04-21 20:18:29'
+  version: '3.5'
+workload:
+  language: python
+  code: "import timeit\nimport statistics\n\nfrom pylab import *\nmpl.use('agg')\n\
+    \nfrom matplotlib.tests.test_mathtext import math_tests\n\ndef setup():\n    global\
+    \ fig\n    clf()\n    fig = figure(figsize=(3, 10)); \n    fig.text(0, 0, \"\\\
+    n\".join(filter(None, math_tests)), size=6); \n\ndef workload():\n    global fig\n\
+    \    for _ in range(10):\n        fig.canvas.draw()\n\nruntimes = timeit.repeat(workload,\
+    \ number=1, repeat=5, setup=setup)\n\n# Print runtime mean and std deviation.\n\
+    print(\"Mean:\", statistics.mean(runtimes))\nprint(\"Std Dev:\", statistics.stdev(runtimes))\n"
+docker:
+  base_image: docker.io/sweperf/sweperf:matplotlib__matplotlib-22875
+  human_image: docker.io/sweperf/sweperf_annotate:matplotlib__matplotlib-22875
+  llm_image: PLACEHOLDER
+  commands:
+    run_base: docker run --rm --name bench_{id}_base --mount type=bind,src=<WORKLOAD_PY>,dst=/tmp/workload.py
+      {base_image} /bin/bash -lc 'python /tmp/workload.py' 2>&1
+    run_human: docker run --rm --name bench_{id}_human --mount type=bind,src=<WORKLOAD_PY>,dst=/tmp/workload.py
+      {human_image} /bin/bash -lc 'chmod +x /perf.sh && /perf.sh && python /tmp/workload.py'
+      2>&1
+    run_llm: echo 'LLM image not available yet for {id}. Please fill docker.llm_image.'
+metrics:
+  reducer: mean_std
+  parse_regex:
+    mean: (?i)\bMean:\s*([0-9.]+)
+    std: (?i)(Std Dev|SD):\s*([0-9.]+)
+notes:
+  user_notes: 'Before Mean: 4.047073603991885
+
+    Before SD: 0.07628795257241888
+
+    After Mean: 3.8206878218101337
+
+    After SD: 0.07041238939111671
+
+    Improvement: -5.59%'
+  mike_notes: ''
+meta:
+  num_covering_tests: '24'

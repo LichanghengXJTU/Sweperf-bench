@@ -1,0 +1,71 @@
+id: sympy__sympy-12640
+status:
+  human: APPROVED
+  llm: COMING_SOON
+comparison:
+  llm_better: COMING_SOON
+repo:
+  org: sympy
+  name: sympy
+  url: https://github.com/sympy/sympy
+  pull_request: https://github.com/sympy/sympy/pull/12640
+  base_commit: 7d8917b0b45932d6c495906a7e6ea4b0dc9ed72b
+  created_at: '2017-05-14 0:43:38'
+  version: '1'
+workload:
+  language: python
+  code: "import timeit\nimport statistics\nfrom sympy.matrices import Matrix\nfrom\
+    \ sympy.core.cache import clear_cache\n\ndef setup():\n    global A, B\n    clear_cache()\n\
+    \    A = Matrix([\n    [12938, 23894, 39845, 9845, 12345, 8765, 31415, 27182,\
+    \ 16180, 13579],\n    [98765, 12345, 87654, 22222, 33333, 44444, 55555, 66666,\
+    \ 77777, 88888],\n    [13579, 24680, 98765, 32132, 21321, 99999, 88888, 77777,\
+    \ 20202, 30303],\n    [11223, 22334, 33445, 44556, 55667, 66778, 77889, 88990,\
+    \ 99001, 10101],\n    [14142, 17320, 22360, 24494, 26457, 28284, 30000, 31622,\
+    \ 33166, 34641],\n    [11235, 22360, 33466, 44556, 55677, 66778, 77889, 88990,\
+    \ 99001, 10101],\n    [11111, 22222, 33333, 44444, 55555, 66666, 77777, 88888,\
+    \ 99999, 12345],\n    [23456, 34567, 45678, 56789, 67890, 78901, 89012, 90123,\
+    \ 12345, 23456],\n    [31415, 27182, 16180, 14142, 17320, 22360, 24494, 26457,\
+    \ 28284, 30000],\n    [31622, 33166, 34641, 36055, 37416, 38730, 40000, 41231,\
+    \ 42426, 43588],\n])\n    \n    B = Matrix([\n    [88888, 77777, 66666, 55555,\
+    \ 44444, 33333, 22222, 11111, 99999, 88888],\n    [11111, 22222, 33333, 44444,\
+    \ 55555, 66666, 77777, 88888, 99999, 12345],\n    [43210, 54321, 65432, 76543,\
+    \ 87654, 98765, 12345, 23456, 34567, 45678],\n    [56789, 67890, 78901, 89012,\
+    \ 90123, 12345, 23456, 34567, 45678, 56789],\n    [67890, 78901, 89012, 90123,\
+    \ 12345, 23456, 34567, 45678, 56789, 67890],\n    [78901, 89012, 90123, 12345,\
+    \ 23456, 34567, 45678, 56789, 67890, 78901],\n    [89012, 90123, 12345, 23456,\
+    \ 34567, 45678, 56789, 67890, 78901, 89012],\n    [90123, 12345, 23456, 34567,\
+    \ 45678, 56789, 67890, 78901, 89012, 90123],\n    [12345, 23456, 34567, 45678,\
+    \ 56789, 67890, 78901, 89012, 90123, 12345],\n    [23456, 34567, 45678, 56789,\
+    \ 67890, 78901, 89012, 90123, 12345, 23456],\n])\n\ndef workload():\n    global\
+    \ A, B\n    _ = A * B\n    _ = A + B\n\nruntimes = timeit.repeat(workload, number=1,\
+    \ repeat=10, setup=setup)\n\nprint(\"Mean:\", statistics.mean(runtimes))\nprint(\"\
+    Std Dev:\", statistics.stdev(runtimes))"
+docker:
+  base_image: docker.io/sweperf/sweperf:sympy__sympy-12640
+  human_image: docker.io/sweperf/sweperf_annotate:sympy__sympy-12640
+  llm_image: PLACEHOLDER
+  commands:
+    run_base: docker run --rm --name bench_{id}_base --mount type=bind,src=<WORKLOAD_PY>,dst=/tmp/workload.py
+      {base_image} /bin/bash -lc 'python /tmp/workload.py' 2>&1
+    run_human: docker run --rm --name bench_{id}_human --mount type=bind,src=<WORKLOAD_PY>,dst=/tmp/workload.py
+      {human_image} /bin/bash -lc 'chmod +x /perf.sh && /perf.sh && python /tmp/workload.py'
+      2>&1
+    run_llm: echo 'LLM image not available yet for {id}. Please fill docker.llm_image.'
+metrics:
+  reducer: mean_std
+  parse_regex:
+    mean: (?i)\bMean:\s*([0-9.]+)
+    std: (?i)(Std Dev|SD):\s*([0-9.]+)
+notes:
+  user_notes: 'Before Mean: 0.00830197670729831
+
+    Before SD: 0.00037998857341221235
+
+    After Mean: 0.0033301156014204024
+
+    After SD: 0.0003748355136830039
+
+    Improvement: -59.89%'
+  mike_notes: ''
+meta:
+  num_covering_tests: '62'

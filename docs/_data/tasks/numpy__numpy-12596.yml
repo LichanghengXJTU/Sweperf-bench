@@ -1,0 +1,58 @@
+id: numpy__numpy-12596
+status:
+  human: APPROVED
+  llm: COMING_SOON
+comparison:
+  llm_better: COMING_SOON
+repo:
+  org: numpy
+  name: numpy
+  url: https://github.com/numpy/numpy
+  pull_request: https://github.com/numpy/numpy/pull/12596
+  base_commit: 6b8441665fb877ab65ec067de7be776ff4f5ac54
+  created_at: '2018-12-19 19:33:52'
+  version: '1.15'
+workload:
+  language: python
+  code: "\n\nimport timeit\nimport statistics\n\nimport numpy as np\n\nl50 = np.arange(1000)\n\
+    fields_number = 10000\narrays = [l50 for _ in range(fields_number)]\nformats =\
+    \ [l50.dtype.str for _ in range(fields_number)]\nformats_str = ','.join(formats)\n\
+    dtype_ = np.dtype(\n    [\n        ('field_{}'.format(i), l50.dtype.str)\n   \
+    \     for i in range(fields_number)\n    ]\n)\nbuffer = l50.tostring() * fields_number\n\
+    \ndef workload():\n    np.core.records.fromarrays(arrays, formats=formats)\n \
+    \   np.core.records.fromarrays(arrays, dtype=dtype_)\n    np.core.records.fromarrays(arrays)\n\
+    \    np.core.records.fromarrays(arrays, formats=formats)\n    np.core.records.fromarrays(arrays,\
+    \ formats=formats_str)\n    np.core.records.fromstring(buffer, dtype=dtype_)\n\
+    \    np.core.records.fromstring(buffer, formats=formats)\n    np.core.records.fromstring(buffer,\
+    \ formats=formats_str)\n\nruntimes = timeit.repeat(workload, number=1, repeat=100)\n\
+    \n# Print runtime mean and std deviation.\nprint(\"Mean:\", statistics.mean(runtimes))\n\
+    print(\"Std Dev:\", statistics.stdev(runtimes))\n"
+docker:
+  base_image: docker.io/sweperf/sweperf:numpy__numpy-12596
+  human_image: docker.io/sweperf/sweperf_annotate:numpy__numpy-12596
+  llm_image: PLACEHOLDER
+  commands:
+    run_base: docker run --rm --name bench_{id}_base --mount type=bind,src=<WORKLOAD_PY>,dst=/tmp/workload.py
+      {base_image} /bin/bash -lc 'python /tmp/workload.py' 2>&1
+    run_human: docker run --rm --name bench_{id}_human --mount type=bind,src=<WORKLOAD_PY>,dst=/tmp/workload.py
+      {human_image} /bin/bash -lc 'chmod +x /perf.sh && /perf.sh && python /tmp/workload.py'
+      2>&1
+    run_llm: echo 'LLM image not available yet for {id}. Please fill docker.llm_image.'
+metrics:
+  reducer: mean_std
+  parse_regex:
+    mean: (?i)\bMean:\s*([0-9.]+)
+    std: (?i)(Std Dev|SD):\s*([0-9.]+)
+notes:
+  user_notes: 'Before Mean: 0.48516641630994856
+
+    Before SD: 0.009486316615274853
+
+    After Mean: 0.4149662828075816
+
+    After SD: 0.011326822633838569
+
+    Improvement: -14.47%'
+  mike_notes: ''
+meta:
+  num_covering_tests: '4'
