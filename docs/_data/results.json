@@ -1,0 +1,31 @@
+[
+  {
+    "id": "pandas-dev__pandas-41861",
+    "before": {
+      "mean": 0.39483109599987076,
+      "std": 0.0038391953468750978
+    },
+    "after_human": {
+      "mean": 0.015593608199924346,
+      "std": 0.0001656524564118761
+    },
+    "after_llm": null,
+    "status": {
+      "human": "APPROVED",
+      "llm": "COMING_SOON"
+    },
+    "comparison": {
+      "llm_better": "COMING_SOON"
+    },
+    "stats": {
+      "collect": false,
+      "cpu_p95": null,
+      "mem_max_mb": null
+    },
+    "updated_at": "2025-08-12T01:23:45Z",
+    "human_improvement": -96.0505622890631,
+    "LLM_improvement": null,
+    "speedup_human": 25.32006004882092,
+    "speedup_llm": null
+  }
+]

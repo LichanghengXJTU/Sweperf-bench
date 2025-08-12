@@ -51,7 +51,7 @@ docker:
       {base_image} /bin/bash -lc 'python /tmp/workload.py' 2>&1
     run_human: docker run --rm --platform linux/amd64 --name bench_{id}_human --mount
       type=bind,src=<WORKLOAD_PY>,dst=/tmp/workload.py {human_image} /bin/bash -lc
-      'chmod +x /perf.sh && git apply -q /tmp/patch.diff && /perf.sh' 2>&1
+      'chmod +x /perf.sh && git apply /tmp/patch.diff && /perf.sh' 2>&1
     run_llm: echo 'LLM image not available yet for {id}. Please fill docker.llm_image.'
 metrics:
   reducer: mean_std

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-import argparse, csv, re
+import argparse, csv
 from pathlib import Path
 import yaml
 
@@ -44,7 +44,7 @@ def main():
                     "llm_image": "PLACEHOLDER",
                     "commands": {
                         "run_base": "docker run --rm --name bench_{id}_base --mount type=bind,src=<WORKLOAD_PY>,dst=/tmp/workload.py {base_image} /bin/bash -lc 'python /tmp/workload.py' 2>&1",
-                        "run_human": "docker run --rm --name bench_{id}_human --mount type=bind,src=<WORKLOAD_PY>,dst=/tmp/workload.py {human_image} /bin/bash -lc 'chmod +x /perf.sh && /perf.sh && python /tmp/workload.py' 2>&1",
+                        "run_human": "docker run --rm --platform linux/amd64 --name bench_{id}_human --mount type=bind,src=<WORKLOAD_PY>,dst=/tmp/workload.py {human_image} /bin/bash -lc 'chmod +x /perf.sh && git apply /tmp/patch.diff && /perf.sh' 2>&1",
                         "run_llm": "echo 'LLM image not available yet for {id}. Please fill docker.llm_image.'"
                     }
                 },
@@ -71,4 +71,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-
